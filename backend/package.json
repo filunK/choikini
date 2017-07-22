@@ -1,5 +1,14 @@
 {
+    "name": "choikini_bk",
+    "version": "0.0.1",
+    "description": "is the simple opinion system for business",
+    "author": {
+        "name": "filunK"
+    },
     "dependencies": {
         "express": "^4.15.3"
+    },
+    "devDependencies": {
+        "@types/express": "^4.0.36"
     }
 }
