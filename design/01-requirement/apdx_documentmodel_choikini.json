@@ -1,0 +1,16 @@
+{
+    "username":"string",
+    "password":"string" ,
+    "auth": [
+        "string - LOCK|CREATE_USER_CHIKINI|VIEW_USER_CHOIKINI|VIEW_ALL_CHOIKINI|MODIFY_ALL_CHOIKINI|MAINTAINANCE"
+    ],
+    "sessionToken":"string",
+    "sessionExpireMode":"string - NORMAL|LONG|UNLIMITED",
+    "sessionTokenLastUsed":"date",
+    "choikiniList": [
+        {
+            "date": "date",
+            "text": "string"
+        }
+    ]
+}

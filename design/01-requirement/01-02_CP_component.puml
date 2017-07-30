@@ -1,0 +1,25 @@
+@startuml 01-02-CP_コンポネント図
+    skinparam componentStyle uml2 
+
+    'コンポネント
+    [WebInterface] as WEB
+    [APServer] as AP
+    [DataBase] as DB
+
+    [NativeApps] as NATIVE
+
+    'インターフェース
+    () "web-API" as api
+    () "DBConnector" as connector
+
+    'コンポネントとインターフェースの紐づけ
+    api - AP
+    connector - DB
+
+    'コンポネントのリレーション
+    WEB ..> api: use
+    AP ..> connector: use
+
+    NATIVE ..> api: use
+
+@enduml

@@ -1,0 +1,112 @@
+@startuml 01-01-UC_WEBAPIサーバのユースケース
+
+    left to right direction
+    
+    'アクターの定義
+    :FrontendWithNormalAuth: as interface
+    :FrontendWithHigherAuth: as hInterface
+
+    interface <|--hInterface
+
+    'ユースケースの定義
+    
+    rectangle "choikini-WebAPI" {
+        usecase login as "ログインを受け付ける"
+        usecase logout as "ログアウトを受け付ける"
+
+        usecase regist as "『ちょい気に』を登録する"
+
+        usecase getChoikini as "登録した『ちょい気に』を取得する"
+        usecase getAllChoikini as "全ユーザが登録した
+                                『ちょい気に』を取得する"
+
+        interface --> login
+        interface --> logout
+        interface --> regist
+        interface --> getChoikini
+
+        hInterface --> getAllChoikini
+    }
+
+/'
+ユースケース記述：
+
+    login:ログインする。
+        【正常１】
+        ユーザkadokawaはパスワードP@ssw0rdを使用してログインAPIを実行。
+        WebAPI側で正常に処理されて、JSONにてセッショントークンを受け取った。
+        【正常２】
+        ユーザkadokawaはパスワードP@ssw0rdを使用かつ、長期ログインオプションを使用してログインAPIを実行。
+        WebAPI側で正常に処理されて、JSONにてセッショントークンを受け取った。
+        【正常３】
+        ロック済みユーザhayakawaはパスワードf@nTasy09876を使用してログインAPIを実行。
+        WebAPI側でロックユーザと判断されてその旨をJSONで受け取った。。
+        【異常】
+        ユーザkadokawaはパスワードPasswordを使用してログインAPIを実行。
+        WebAPI側でログイン失敗となり、エラーのJSONを受け取った。
+
+    logout:ログアウトする
+        【正常１】
+        ユーザkadokawaはログアウトAPIを実行。
+        WebAPI側で正常に処理された旨をJSONで受け取った。
+
+    regist:『ちょい気に』を登録する
+        【正常１】
+        ユーザkadokawaは以下の文言を登録するためAPIを実行。
+        『
+        ちょい気にの<投稿可能文字列が160文字だけしかないのは短すぎやしないか。
+        こんなに短い文字数では書きたいことも書けないのではないか。
+        そもそもちょっと気になることを登録することに意義を感じない。この情報からどうやって問題を見出すというのか。
+        私には目的が見えなくて分からない。
+        160文字というのは案外かけるものだな。        
+        』(160文字)
+        WebAPI側で正常に処理された旨をJSONで受け取った。
+        【正常2】
+        ユーザkadokawaは以下の文言を登録するためAPIを実行。
+        『
+        Is it too short to have only 160 letters?
+        In such a short number of letters, I can not write what I have felt.
+        I do not feel the meaning to register an anxious.
+        』(160文字)
+        WebAPI側で正常に処理された旨をJSONで受け取った。
+        【異常１】
+        ユーザkadokawaは以下の文言を登録するためAPIを実行。
+        『
+        ちょい気にの<投稿可能文字列が160文字だけしかないのは短すぎやしないか。
+        こんなに短い文字数では書きたいことも書けないのではないか。
+        そもそもちょっと気になることを登録することに意義を感じない。この情報からどうやって問題を見出すというのか。
+        私には目的が見えなくて分からないよ。
+        160文字というのは案外かけるものだな。        
+        』(161文字)
+        WebAPI側から文字数超過の旨をJSONで受け取った。
+        。
+    
+    getChoikini:登録した『ちょい気に』を取得する
+        【正常１】
+        ユーザkadokawaは自分の登録したちょい気にを一覧取得した。
+        『
+        ちょい気にの<投稿可能文字列が160文字だけしかないのは短すぎやしないか。
+        こんなに短い文字数では書きたいことも書けないのではないか。
+        そもそもちょっと気になることを登録することに意義を感じない。この情報からどうやって問題を見出すというのか。
+        私には目的が見えなくて分からない。
+        160文字というのは案外かけるものだな。        
+        』
+        『
+        Is it too short to have only 160 letters?
+        In such a short number of letters, I can not write what I have felt.
+        I do not feel the meaning to register an anxious.
+        』
+        の内容が記載されたJSONを受け取った。
+    
+    getAllChoikini：全ユーザが登録した『ちょい気に』を取得する
+        【正常１】
+        ユーザhayakawaは全ユーザのちょい気にを一覧取得した。
+            ・ユーザkadokawaの２件
+            ・ユーザhayakawaの100件
+        のちょい気にが記載されたJSONを受けとった。
+
+
+'/
+
+
+@enduml
