@@ -1,0 +1,93 @@
+@startuml
+
+    
+    package commons <<Frame>> {
+        class ユーティリティ {
+
+        }
+
+        class Logger as "ロガー" {
+            +{static} void 情報ログ出力()
+            +{static} void 警告ログ出力()
+            +{static} void 異常ログ出力()
+            
+        }
+        
+    }
+    
+    
+    class Application as "エントリポイント" {
+        +void run()
+        -void configure(Express.Application app)
+        -void route(Express.Application app)
+    }
+
+    package router <<Frame>> {
+        
+    }
+    
+    
+    package prodecure <<Frame>> {
+        interface Auth as "認証" {
+            +ログイン()
+            +ログオフ()
+            +boolean 認証検証()
+
+        }
+
+        interface Choikini as "処理本体" {
+            +ログイン()
+            +ログオフ()
+            +登録()
+            +取得()
+            +全ちょい気に取得()
+            
+        }
+
+        Application -- Choikini
+        Choikini - Auth
+    }
+    
+    
+    
+    package database <<Frame>> {
+        interface Dao as "DAO" {
+            +ユーザ情報取得()
+            +ユーザトークン取得()
+            +ログイン処理()
+            +ログオフ処理()
+            +ちょい気に登録()
+            +ちょい気に取得()
+            
+        }
+
+        Dao <|- MongoDao
+        class MongoDao {
+        }
+
+        Choikini - Dao
+        Auth - Dao
+    }
+    
+    
+    package objectModels <<Frame>> {
+        enum userAuthType as "ユーザ権限" {
+            USUAL = 0
+            ADMINISTRATOR = 10
+        }
+    
+        class User as "ユーザ" {
+            +ユーザ名:string
+            +パスワード:string
+            +ユーザトークン:string
+            +ユーザ権限:ユーザ情報
+        }
+
+        Dao - User
+        Choikini - User
+ 
+    }
+
+
+
+@enduml
