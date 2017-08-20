@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var Express = require("express");
 var Http = require("http");
+var R = require("./routing");
 /**
  * choikini_bkのエントリポイント
  */
@@ -58,9 +59,8 @@ var Application = (function () {
     Application.prototype.route = function (app) {
         // GETのルーティング
         // トリアエズナマ
-        app.get('/', function (request, response) {
-            response.send('Hello choikini World!');
-        });
+        var indexAction = new R.routing.IndexAction(app);
+        indexAction.registRoute();
         // POSTのルーティング
         // 別モジュールでのルーティング
     };
