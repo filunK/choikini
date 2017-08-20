@@ -72,12 +72,8 @@ class Application {
     private route(app: Express.Application):void {
 
         // トリアエズナマ
-        let indexAction = new Routing.IndexAction(app);
-        indexAction.registRoute();
-
-        let otameshiAction = new Routing.OtameshiAction(app);
-        otameshiAction.registRoute();
-
+        new Routing.IndexAction(app).registRoute();
+        new Routing.OtameshiAction(app).registRoute();
         
     }
 }

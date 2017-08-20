@@ -24,12 +24,13 @@
 
     package routing <<Frame>> {
 
-        Application - IRoutable
+        Application - IRoute
         interface Express.IRoute as "URIルータ" {
         }
 
-        IRoutable <|.. RouteBase
+        IRoute <|.. RouteBase
         abstract class RouteBase as "基礎ルータ" {
+            #{abstract}Path: string
             +void ルート登録()
             #{abstract}void get(req:Request, res:Responce, next:NextAction)
             #{abstract}void post(req:Request, res:Responce, next:NextAction)
