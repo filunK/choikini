@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 var Express = require("express");
 var Http = require("http");
-var R = require("./routing");
+var Routing = require("./routing");
 /**
  * choikini_bkのエントリポイント
  */
@@ -57,12 +57,11 @@ var Application = (function () {
      * @param app Express.Applicationインターフェースの実装
      */
     Application.prototype.route = function (app) {
-        // GETのルーティング
         // トリアエズナマ
-        var indexAction = new R.routing.IndexAction(app);
+        var indexAction = new Routing.IndexAction(app);
         indexAction.registRoute();
-        // POSTのルーティング
-        // 別モジュールでのルーティング
+        var otameshiAction = new Routing.OtameshiAction(app);
+        otameshiAction.registRoute();
     };
     return Application;
 }());

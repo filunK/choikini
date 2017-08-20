@@ -22,35 +22,90 @@
         -void route(Express.Application app)
     }
 
-    package router <<Frame>> {
+    package routing <<Frame>> {
+
+        Application - IRoutable
+        interface Express.IRoute as "URIルータ" {
+        }
+
+        IRoutable <|.. RouteBase
+        abstract class RouteBase as "基礎ルータ" {
+            +void ルート登録()
+            #{abstract}void get(req:Request, res:Responce, next:NextAction)
+            #{abstract}void post(req:Request, res:Responce, next:NextAction)
+            #{abstract}void put(req:Request, res:Responce, next:NextAction)
+            #{abstract}void delete(req:Request, res:Responce, next:NextAction)
+        }
+
+        RouteBase <|-- Index
+        class Index as "/" {
+        }
+
+        RouteBase <|-- Login
+        class Login as "/login" {
+        }
+
+        RouteBase <|-- Logoff
+        class Logoff as "/logoff" {
+        }
+
+        RouteBase <|-- Choikini
+        class Choikini as "/choikini" {
+        }
         
+        RouteBase <|-- ChoikiniAll
+        class ChoikiniAll as "/choikini-all" {
+        }
+
     }
     
     
-    package prodecure <<Frame>> {
-        interface Auth as "認証" {
-            +ログイン()
-            +ログオフ()
-            +boolean 認証検証()
-
+    package actions <<Frame>> {
+        interface IActionable as "処理" {
+            +json 処理()
         }
 
-        interface Choikini as "処理本体" {
-            +ログイン()
-            +ログオフ()
-            +登録()
-            +取得()
-            +全ちょい気に取得()
-            
+        IActionable <|.. ActionBase
+        abstract class ActionBase as "処理ベース" {
+            +json 処理()
+            #boolean 認証検証()
+            #{abstract} 事前処理()
+            #{abstract} 本処理()
+            #{abstract} 事後処理()
+        }
+        
+        ActionBase <|-- LoginAction
+        class LoginAction as "ログイン" {
+        }
+        
+        ActionBase <|-- LogoffAction
+        class LogoffAction as "ログオフ" {
         }
 
-        Application -- Choikini
-        Choikini - Auth
+        ActionBase <|-- RegistAction
+        class RegistAction as "登録" {
+        }
+
+        ActionBase <|-- SelectAction
+        class SelectAction as "取得" {
+        }
+
+        ActionBase <|-- SelectAllAction
+        class SelectAllAction as "全ちょい気に取得" {
+        }
+
     }
     
     
     
     package database <<Frame>> {
+
+        ActionBase - Dao
+        LoginAction - Dao
+        LogoffAction - Dao
+        RegistAction - Dao
+        SelectAction - Dao
+        SelectAllAction - Dao
         interface Dao as "DAO" {
             +ユーザ情報取得()
             +ユーザトークン取得()
@@ -61,12 +116,10 @@
             
         }
 
-        Dao <|- MongoDao
+        Dao <|.. MongoDao
         class MongoDao {
         }
 
-        Choikini - Dao
-        Auth - Dao
     }
     
     
@@ -81,10 +134,8 @@
             +パスワード:string
             +ユーザトークン:string
             +ユーザ権限:ユーザ情報
+            +ちょい気に:List
         }
-
-        Dao - User
-        Choikini - User
  
     }
 

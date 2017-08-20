@@ -3,6 +3,7 @@ import * as Http from "http";
 import * as Cluster from "cluster";
 import { cpus } from "os";
 
+import * as Routing from "./routing";
 
 
 /**
@@ -70,17 +71,14 @@ class Application {
      */
     private route(app: Express.Application):void {
 
-        // GETのルーティング
         // トリアエズナマ
-        app.get('/', 
-            function(request: Express.Request, response: Express.Response) {
-                response.send('Hello choikini World!');
-            }
-        );
+        let indexAction = new Routing.IndexAction(app);
+        indexAction.registRoute();
 
-        // POSTのルーティング
+        let otameshiAction = new Routing.OtameshiAction(app);
+        otameshiAction.registRoute();
 
-        // 別モジュールでのルーティング
+        
     }
 }
 
