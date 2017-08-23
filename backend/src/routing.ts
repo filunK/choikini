@@ -3,18 +3,22 @@
  * URIとロジックをひも付け、制御する。
  */
 
-import {Application, Request, Response} from "express";
+import {Application, Request, Response, Router,RouterOptions} from "express";
+
+import {RoutingError} from "./errors";
+import { Logger } from "./commons";
 
 /**
  * IRoutable
  * ルーティングを制御するクラスが実装すべきメソッドを規定します。
  */
 export interface IRoutable {
+
     /**
      * registRoute
      * ルーティングをExpress.Applicationに登録します。
      */
-    registRoute(): void;
+    RegistRoute(): void;
 }
 
 /**
@@ -33,25 +37,35 @@ export abstract class RouterBase implements IRoutable {
         constructor(app: Application) {
         this.__app = app;
     }
-    
-    registRoute() {
 
-        if (null != this.Path) {
-            this.__app.get(this.Path,this.get);
-            this.__app.post(this.Path,this.post);
-            this.__app.put(this.Path,this.put);
-            this.__app.delete(this.Path,this.delete);
+    /**
+     * ConfigureRouter
+     * Routerオブジェクトの設定を行います。
+     */
+    protected abstract ConfigureRouter(router: Router): Router;
     
+    public RegistRoute(): void {
+        let pathlength = this.Path.length
+
+        // Pathプロパティが設定されていなければエラーとする。
+        if (null != this.Path　&& 0 < pathlength) {
+            
+            let router = Router(
+                {
+                    caseSensitive:true
+                }
+            );
+
+            router = this.ConfigureRouter(router);
+
+            this.__app.use(this.Path,router);
+
+
         } else {
-            // TODO: エラーログを出す
+            throw new RoutingError("The Property Path does not identified")
         }
         
     }
-
-    protected abstract get(req: Request, res: Response): void;
-    protected abstract post(req: Request, res: Response): void;
-    protected abstract put(req: Request, res: Response): void;
-    protected abstract delete(req: Request, res: Response): void;
 }
 
 /**
@@ -63,27 +77,22 @@ export class IndexAction extends RouterBase {
         return "/";
     }
 
-    protected get(req:Request, res: Response): void {
+    protected ConfigureRouter(router: Router): Router {
+        
+        router.get("/", this.get);
+
+        return router;
+    }
+
+    private get(req:Request, res: Response): void {
         res.send('Hello choikini World!');
-        console.log("index accessed......");
-    }
-    
-    protected post(req: Request, res: Response): void {
-        // DO NOTHING
-    }
-
-    protected put(req: Request, res: Response): void {
-        // DO NOTHING
-    }
-
-    protected delete(req: Request, res: Response): void {
-        // DO NOTHING
+        Logger.LogSystemInfo("index accessed......");
     }
 
 }
 
 /**
- * IndexAction
+ * OtameshiAction
  */
 export class OtameshiAction extends RouterBase {
     
@@ -91,20 +100,16 @@ export class OtameshiAction extends RouterBase {
         return "/otameshi";
     }
 
+    protected ConfigureRouter(router: Router): Router {
+
+        router.get("/", this.get);
+        return router;
+    }
+
     protected get(req:Request, res: Response): void {
         res.send('OTAMESHI---Hello choikini World!---OTAMESHI');
-        console.log("otameshi accessed......");
+        Logger.LogSystemInfo("otameshi accessed......");
     }
     
-    protected post(req: Request, res: Response): void {
-        // DO NOTHING
-    }
-
-    protected put(req: Request, res: Response): void {
-        // DO NOTHING
-    }
-
-    protected delete(req: Request, res: Response): void {
-        // DO NOTHING
-    }
 }
+

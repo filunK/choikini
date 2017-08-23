@@ -6,7 +6,11 @@
         "name": "filunK"
     },
     "dependencies": {
-        "express": "^4.15.3"
+        "@types/config": "0.0.32",
+        "@types/log4js": "0.0.33",
+        "config": "^1.26.2",
+        "express": "^4.15.3",
+        "log4js": "^2.3.3"
     },
     "devDependencies": {
         "@types/express": "^4.0.36"

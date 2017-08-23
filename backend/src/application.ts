@@ -3,6 +3,8 @@ import * as Http from "http";
 import * as Cluster from "cluster";
 import { cpus } from "os";
 
+import {Logger} from "./commons";
+import {ApplicationError} from "./errors"
 import * as Routing from "./routing";
 
 
@@ -15,7 +17,7 @@ class Application {
      * run
      * choikini_bk開始メソッド
      */
-    public run(): void {
+    public Run(): void {
         
         // Clusterモジュールにてクラスタリング
 /*
@@ -43,13 +45,14 @@ class Application {
 */
         let app = Express();
 
-        this.configure(app);
-        this.route(app);
+        this.Configure(app);
+        this.Route(app);
+        this.HandleError(app);
 
         Http.createServer(app).listen(
             app.get('port'),
             function() {
-                console.log('Express server listening on port ' + app.get('port'));
+                Logger.LogAccessInfo('Express server listening on port ' + app.get('port'));
             }
             );
 
@@ -59,9 +62,13 @@ class Application {
      * 指定したExpressjsのApplicationインターフェースの設定を行う。
      * @param app Express.Applicationインターフェースの実装
      */
-    private configure(app:Express.Application):void {
+    private Configure(app:Express.Application):void {
 
         app.set('port', process.env.PORT || 30000);
+
+        // ロガーの変更
+        Logger.initialize();
+        app.use(Logger.getExpressLogger());
 
     }
 
@@ -69,11 +76,33 @@ class Application {
      * アプリケーションのルーティングを行う。
      * @param app Express.Applicationインターフェースの実装
      */
-    private route(app: Express.Application):void {
+    private Route(app: Express.Application):void {
 
         // トリアエズナマ
-        new Routing.IndexAction(app).registRoute();
-        new Routing.OtameshiAction(app).registRoute();
+        new Routing.IndexAction(app).RegistRoute();
+        new Routing.OtameshiAction(app).RegistRoute();
+        
+    }
+
+    /**
+     * HandleError
+     * @param app Express.Applicationインターフェースの実装
+     */
+    public HandleError(app: Express.Application) {
+
+        // 404
+        app.use(function(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+            let err = new ApplicationError("Not Found:" + req.originalUrl)
+            res.status(404);
+            next(err);
+        });
+
+
+        // other errors
+        app.use(function(err: Error, req: Express.Request, res:Express.Response, next:Express.NextFunction){
+            throw new ApplicationError(err.message);
+            
+        });
         
     }
 }
@@ -84,5 +113,5 @@ class Application {
 
 let choikini = new Application();
 
-choikini.run();
+choikini.Run();
 
