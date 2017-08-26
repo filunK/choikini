@@ -1,3 +1,5 @@
 backend/node_modules
 design/knowledge/
 backend/bin/
+backend/coverage
+backend/karma.conf.js
