@@ -7,11 +7,15 @@
     },
     "license": "MIT",
     "dependencies": {
+        "@types/body-parser": "^1.16.5",
         "@types/config": "0.0.32",
         "@types/log4js": "0.0.33",
+        "@types/mongoose": "^4.7.21",
+        "body-parser": "^1.18.0",
         "config": "^1.26.2",
         "express": "^4.15.3",
-        "log4js": "^2.3.3"
+        "log4js": "^2.3.3",
+        "mongoose": "^4.11.10"
     },
     "devDependencies": {
         "@types/chai": "^4.0.4",
@@ -28,8 +32,8 @@
         "typescript": "^2.4.2"
     },
     "scripts": {
-        "pretestMocha":"tsc  -p ./tsconfig.json",
-        "testMocha":"istanbul cover _mocha || echo",
-        "posttestMocha":"remap-istanbul -i coverage/coverage.json -o coverage/html-report -t html"
+        "pretestMocha": "tsc  -p ./tsconfig.json",
+        "testMocha": "istanbul cover _mocha || echo",
+        "posttestMocha": "remap-istanbul -i coverage/coverage.json -o coverage/html-report -t html"
     }
 }

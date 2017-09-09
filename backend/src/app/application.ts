@@ -1,6 +1,7 @@
 import * as Express from "express";
 import * as Http from "http";
 import * as Cluster from "cluster";
+import * as BodyParser from "body-parser";
 import { cpus } from "os";
 
 import {Logger} from "./commons";
@@ -70,6 +71,12 @@ class Application {
         Logger.initialize();
         app.use(Logger.getExpressLogger());
 
+        // body-parserの使用
+        app.use(BodyParser.urlencoded({
+            extended: true
+        }));
+
+        app.use(BodyParser.json());
     }
 
     /**
