@@ -2,11 +2,8 @@
 title 02-03 ログオフ処理
     start
     
-    partition ルーティング {
+    partition 処理 {
 
-        :POSTリクエストの受信;
-        :パラメータの整理・変数保持;
-        
         :ログオフ処理|
         partition ログオフ処理 {
             
@@ -30,7 +27,7 @@ title 02-03 ログオフ処理
                 else (no = トークンない)
                     :処理エラー「トークンなし」;
                     stop
-                    
+
                 endif
 
 
@@ -44,15 +41,6 @@ title 02-03 ログオフ処理
             
         }
 
-        if (正常終了?) then (yes)
-        :Userオブジェクトから\nJSONオブジェクト生成;
-            
-        else (no)
-        :Errorオブジェクトから\nJSONオブジェクト生成;
-            
-        endif
-        
-        :レスポンス;
         
     }
 
