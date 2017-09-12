@@ -12,8 +12,8 @@ import {User} from "./datamodel"
 export class Logger {
 
     public static initialize() {
-        let configure = Config.util.loadFileConfigs(Path.join(__dirname,"config")).log4js;
-        Log4js.configure(<Log4js.IConfig>configure);
+        let configure = Utils.getConfig<Log4js.IConfig>("log4js");
+        Log4js.configure(configure);
     }
 
     public static LogAccessInfo(message: string): void {
@@ -71,8 +71,23 @@ export class Logger {
     }
 }
 
-export namespace utils {
+/**
+ * ユーティリティ
+ */
+export class Utils {
 
+    /**
+     * configよりトップレベルオブジェクトを取得する。
+     * @param T 取得するオブジェクト構造
+     * @param key キーとなる要素
+     */
+    public static getConfig<T>(key: string): T {
+
+        let configure = Config.util.loadFileConfigs(Path.join(__dirname,"config"));
+
+        let obj: T = configure[key];
+        return obj;
+    }
 }
 
 /**

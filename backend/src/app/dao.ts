@@ -4,9 +4,8 @@
 
 import { User, ChoikiniList, ChoikiniEntity } from "./datamodel"
 import { DaoError } from "./errors"
+import {Utils} from "./commons"
 
-import * as Path from "path";
-import * as Config from "config";
 import * as Mongoose from "mongoose";
 
 import * as Ctypto from "crypto";
@@ -169,7 +168,16 @@ export class MongoDao implements Dao {
      */
     private constructor() {
 
-        let connectionInfo = <{ server: string, port: string, database: string, user: string, password: string }>Config.util.loadFileConfigs(Path.join(__dirname, "config")).mongoose;
+
+        let connectionInfo = Utils.getConfig< {
+            server: string, 
+            port: string, 
+            database: 
+            string, 
+            user: 
+            string, 
+            password: string 
+        }>("mongoose");
 
         let connectionString = "mongodb://" + connectionInfo.user + ":" + connectionInfo.password + "@" + connectionInfo.database + ":" + connectionInfo.port + "/" + connectionInfo.database;
 
