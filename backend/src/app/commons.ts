@@ -85,7 +85,7 @@ export class Utils {
 
         let configure = Config.util.loadFileConfigs(Path.join(__dirname,"config"));
 
-        let obj: T = configure[key];
+        let obj: T = <T>configure[key];
         return obj;
     }
 }
