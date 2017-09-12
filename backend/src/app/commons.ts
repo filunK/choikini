@@ -4,7 +4,11 @@ import * as Path from "path";
 import * as Config from "config";
 import * as Log4js from "log4js";
 
+import {User} from "./datamodel"
 
+/**
+ * ロガー
+ */
 export class Logger {
 
     public static initialize() {
@@ -68,5 +72,39 @@ export class Logger {
 }
 
 export namespace utils {
+
+}
+
+/**
+ * 認証
+ */
+export class Authentication {
+
+    /**
+     * Saltの文字列長
+     */
+    public static get SALT_LENGHT(): number { return 10;}
+
+    /**
+     * 生成Saltに含める文字列
+     */
+    public static get SALT_CHARSET(): string { return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/!?-=^~|[{]}@`:*";}
+    
+    /**
+     * generateSalt
+     * パスワード情報のシードとなるSALTを生成する。
+     */
+    public static generateSalt(): string {
+
+        let enctypted: string = "";
+
+        for (var i = 0; i < Authentication.SALT_LENGHT; i++) {
+
+            enctypted += Authentication.SALT_CHARSET.split("")[Math.floor(Math.random() * Authentication.SALT_CHARSET.length)];
+            
+        }
+
+        return enctypted;
+    }
 
 }
