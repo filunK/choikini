@@ -1,0 +1,27 @@
+@startuml 02-03_SEQ_ログオフ処理
+hide footbox
+
+title 02-03 ログオフ処理
+
+control 処理 as procedure
+control DAO as dao
+database MongoDB as db
+
+procedure -> procedure: 処理
+activate procedure
+
+procedure -> procedure: ログオフ処理
+activate procedure
+
+procedure -> dao: ログオフ処理
+activate dao
+dao -> db: select:ユーザ
+dao -> db: update:ユーザ
+procedure <-- dao: boolean
+deactivate dao
+
+deactivate procedure
+
+deactivate procedure
+
+@enduml

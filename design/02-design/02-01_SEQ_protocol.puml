@@ -1,0 +1,55 @@
+@startuml 02-01 REST APIのクライアントからの利用プロトコル
+
+hide footbox
+title 02-01 REST APIのクライアントからの利用プロトコル
+
+' アクター
+actor "クライアント" as client
+control "WEB API" as webapi
+database "MongoDB" as db
+
+...
+client -> webapi: ログイン(ユーザ名、パスワード)
+activate webapi
+webapi -> webapi: ログイン
+activate webapi
+webapi -> db: ログイン処理
+client <-- webapi:ユーザ情報、トークン
+deactivate webapi
+
+||50||
+client -> webapi: 処理(パラメータ、トークン)
+webapi -> webapi: 処理
+activate webapi
+webapi -> db: DB処理
+
+webapi -> db: ログオフ処理
+client <-- webapi: レスポンス
+deactivate webapi
+deactivate webapi
+||20||
+
+...
+client -> webapi: ログイン(ユーザ名、パスワード)
+activate webapi
+webapi -> webapi: ログイン
+activate webapi
+webapi -> db: ログイン処理
+client <-- webapi:ユーザ情報、トークン
+deactivate webapi
+
+||50||
+client -> webapi: 処理(パラメータ、トークン)
+webapi -> webapi: 処理
+activate webapi
+webapi -> db: DB処理
+
+webapi -> db: ログオフ処理
+client <-- webapi: レスポンス
+deactivate webapi
+deactivate webapi
+
+
+
+
+@enduml

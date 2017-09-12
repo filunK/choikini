@@ -1,0 +1,33 @@
+@startuml 02-02_SEQ_ログイン処理
+hide footbox
+
+title 02-02 ログイン処理
+
+control LoginAction as router
+control ログイン処理 as procedure
+control DAO as dao
+database MongoDB as db
+
+[o-> router: [PUT]ログイン
+activate router
+router -> router: リクエスト解析
+
+router -> procedure: ログイン処理
+activate procedure
+
+procedure -> dao: ログイン処理
+activate dao
+dao -> db: select:ユーザ
+dao -> db: update:ユーザ
+procedure <-- dao: User
+deactivate dao
+
+router <-- procedure: User
+deactivate procedure
+
+router -> router: レスポンス生成
+
+[<-- router: JSON
+
+
+@enduml

@@ -1,0 +1,61 @@
+@startuml 02-03_ACT_ログオフ処理
+title 02-03 ログオフ処理
+    start
+    
+    partition ルーティング {
+
+        :POSTリクエストの受信;
+        :パラメータの整理・変数保持;
+        
+        :ログオフ処理|
+        partition ログオフ処理 {
+            
+            :DAO-ログオフ処理|
+            partition DAO-ログオフ処理 {
+                
+                :ユーザ名に対応するドキュメントを取得;
+                if (取得処理例外発生? \n or 該当データなし?) then (yes)
+                    :処理エラー「ユーザ情報取得失敗」;
+                    stop
+                    
+                endif
+
+                if (ドキュメント.トークンがある? \n and 同一トークン) then (yes)
+                    :トークン削除;
+
+                elseif (トークンが異なる?) then (yes)
+                    :処理エラー「トークン無効」;
+                    stop
+                    
+                else (no = トークンない)
+                    :処理エラー「トークンなし」;
+                    stop
+                    
+                endif
+
+
+            }
+
+
+            if (例外発生?) then (yes)
+                :処理エラー「ログオフ失敗」;
+                stop
+            endif
+            
+        }
+
+        if (正常終了?) then (yes)
+        :Userオブジェクトから\nJSONオブジェクト生成;
+            
+        else (no)
+        :Errorオブジェクトから\nJSONオブジェクト生成;
+            
+        endif
+        
+        :レスポンス;
+        
+    }
+
+    end
+
+@enduml

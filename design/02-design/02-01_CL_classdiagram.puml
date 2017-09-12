@@ -6,6 +6,13 @@
 
         }
 
+        class 認証 {
+            +{static} string パスワード暗号化(string)
+            +{static} boolean バリデート(User)
+            +{static} boolean ワンタイムトークン生成(User)
+            +{static} boolean ワンタイムトークン破棄(User)
+        }
+
         class Logger as "ロガー" {
             +{static} void 情報ログ出力()
             +{static} void 警告ログ出力()
