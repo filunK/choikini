@@ -1,0 +1,91 @@
+{
+    "log4js": {
+        "appenders": {
+            "access": {
+                "type": "dateFile"
+                ,"filename": "/var/log/choikini/accesslog"
+                ,"pattern": "-yyyy-MM-dd"
+                ,"backup": 10
+                ,"layout": {
+                    "type": "pattern"
+                    ,"pattern":"%d:::::%p:::::%c:::::%m%n"
+                }
+            },
+            "error": {
+                "type": "dateFile"
+                ,"filename": "/var/log/choikini/errorlog"
+                ,"pattern": "-yyyy-MM-dd"
+                ,"backup": 10
+                ,"layout": {
+                    "type": "pattern"
+                    ,"pattern":"%d:::::%p:::::%c:::::%m%n"
+                }
+            },
+            "system": {
+                "type": "dateFile"
+                ,"filename": "/var/log/choikini/systemlog"
+                ,"pattern": "-yyyy-MM-dd"
+                ,"backup": 10
+                ,"layout": {
+                    "type": "pattern"
+                    ,"pattern":"%d:::::%p:::::%c:::::%m%n"
+                }
+            },
+            "console": {
+                "type": "console"
+                ,"layout": {
+                    "type": "pattern"
+                    ,"pattern":"%d:::::%p:::::%c:::::%m%n"
+                }
+            },
+            "stdout": {
+              "type": "stdout"
+              ,"layout": {
+                    "type": "pattern"
+                    ,"pattern":"%d:::::%p:::::%c:::::%m%n"
+                }
+            }
+        },
+        "categories": {
+            "default": {
+                "appenders": [
+                    "access"
+                    ,"console"
+                    ,"stdout"
+                ]
+                ,"level": "ALL"
+            },
+            "access": {
+                "appenders": [
+                    "access"
+                    ,"console"
+                    ,"stdout"
+                ]
+                ,"level": "ALL"
+            },
+            "system": {
+                "appenders": [
+                    "system"
+                    ,"console"
+                    ,"stdout"
+                ]
+                ,"level": "ALL"
+            },
+            "error": {
+                "appenders": [
+                    "error"
+                    ,"console"
+                    ,"stdout"
+                ]
+                ,"level": "ALL"
+            }
+        }
+    },
+    "mongoose" :{
+        "server":"localhost",
+        "port":"27017",
+        "database":"choikini",
+        "user":"choikini",
+        "password":"choikini_masterkey"
+    }
+}
