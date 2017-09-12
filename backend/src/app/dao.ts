@@ -54,14 +54,10 @@ export class MongoDao implements Dao {
     private static _instance: MongoDao;
 
     /**
-     * MongoDaoのインスタンスを取得
-     * @return {MongoDao} - MongoDaoのシングルトンインスタンス
-     * @throws DaoError
+     * MongoDaoのシングルトンインスンタンス
      */
-    public static getInstance(): MongoDao {
-
+    public static get Instance():MongoDao {
         if (MongoDao._instance === null) {
-
             try {
                 MongoDao._instance = new MongoDao();
             } catch (error) {
@@ -172,10 +168,8 @@ export class MongoDao implements Dao {
         let connectionInfo = Utils.getConfig< {
             server: string, 
             port: string, 
-            database: 
-            string, 
-            user: 
-            string, 
+            database: string, 
+            user: string, 
             password: string 
         }>("mongoose");
 
