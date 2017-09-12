@@ -3,3 +3,4 @@ design/knowledge/
 backend/bin/
 backend/coverage
 backend/karma.conf.js
+backend/src/exp/
