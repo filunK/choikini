@@ -37,21 +37,15 @@ title 02-02 ログイン処理
             }
 
 
-            if (例外発生?) then (yes)
-                :処理エラー「認証失敗」;
-                stop
+            if (例外ない?) then (yes)
+                :Userオブジェクトから\nHAL生成;
+            else (no)
+                :Errorオブジェクトから\nHAL生成;
             endif
             
         }
 
-        if (正常終了?) then (yes)
-        :Userオブジェクトから\nJSONオブジェクト生成;
-            
-        else (no)
-        :Errorオブジェクトから\nJSONオブジェクト生成;
-            
-        endif
-        
+        :HALに情報追加(_links);
         :レスポンス;
         
     }
