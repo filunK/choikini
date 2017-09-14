@@ -87,5 +87,9 @@
         "database":"choikini",
         "user":"choikini",
         "password":"choikini_masterkey"
+    },
+    "auth" : {
+        "crypto": "XXXXXX",
+        "hash" : "YYYYYY"
     }
 }
