@@ -8,6 +8,9 @@ import {Application, Request, Response, Router,RouterOptions} from "express";
 import {RoutingError} from "./errors";
 import { Logger } from "./commons";
 
+import * as D from "./datamodel"
+import * as P from "./procedure"
+
 /**
  * IRoutable
  * ルーティングを制御するクラスが実装すべきメソッドを規定します。
@@ -113,3 +116,55 @@ export class OtameshiAction extends RouterBase {
     
 }
 
+
+/**
+ * ログインアクション
+ * 
+ * リクエストオブジェクト: JSON
+ * {
+ *  name: string => ユーザ名,
+ *  password: string => パスワード
+ * }
+ * 
+ */
+export class LoginAction extends RouterBase {
+    
+    protected get Path() : string {
+        return "/user";
+    }
+
+    private get SubPathRoot(): string {
+        return "/";
+    }
+
+    protected ConfigureRouter(router: Router) {
+
+        router.post(this.SubPathRoot, this.post);
+
+        return router;
+    }
+
+    protected post(req:Request, res: Response): void {
+        let postData: {name: string, password: string} = req.body;
+
+        // データ整形
+        let user = new D.User();
+        user.Name = postData.name;
+        user.Password = postData.password;
+
+        // 処理本体
+        let login = new P.LoginProcedure();
+        let hal = login.exec(user);
+        //let hal = login.execAsync(user);
+
+        // HAL _linkの整形
+        let link = {
+            "self" : {
+                "href" : "/user/"
+            }
+        }
+        hal.Links = link;
+
+        res.json(hal);
+    }
+}

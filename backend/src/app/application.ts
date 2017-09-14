@@ -88,6 +88,7 @@ class Application {
         // トリアエズナマ
         new Routing.IndexAction(app).RegistRoute();
         new Routing.OtameshiAction(app).RegistRoute();
+        new Routing.LoginAction(app).RegistRoute();
         
     }
 

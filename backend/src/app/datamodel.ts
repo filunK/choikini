@@ -3,7 +3,7 @@
  * MongoDB関連オブジェクト
  */
 export interface MongoObject {
-    Id: string;
+    Id: string | undefined;
 
 }
 
@@ -53,7 +53,7 @@ export const HAL_EMBEDDED_STATE = {
  */
 export class User implements MongoObject {
 
-    private id: string;
+    private id: string | undefined;
     private name: string;
     private password: string;
     private token: string;
@@ -63,12 +63,12 @@ export class User implements MongoObject {
     /**
      * [getter]ドキュメントID
      */
-    public get Id(): string { return this.id; }
+    public get Id(): string | undefined { return this.id; }
 
     /**
      * [setter]ドキュメントID
      */
-    public set Id(id: string) { this.id = id; }
+    public set Id(id: string | undefined) { this.id = id; }
 
     /**
      * [gettter]ユーザ名
@@ -274,4 +274,14 @@ export class HalEmbedded<T> {
  */
 export class LoginJSON {
 
+    private token: string;
+    /**
+     * トークン
+     */
+    public get Token(): string { return this.token}
+    public set Token(token: string) { this.token = token}
+
+    public constructor() {
+        this.Token = "";
+    }
 }
