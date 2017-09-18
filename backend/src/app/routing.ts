@@ -153,9 +153,9 @@ export class LoginAction extends RouterBase {
         user.Password = postData.password;
 
         // 処理本体
+        /*
         let login = new P.LoginProcedure();
         let hal = login.exec(user);
-        //let hal = login.execAsync(user);
 
         // HAL _linkの整形
         let link = {
@@ -164,7 +164,20 @@ export class LoginAction extends RouterBase {
             }
         }
         hal.Links = link;
-
         res.json(hal);
+        */
+
+        let login = new P.LoginProcedure();
+        login.exec(user)
+            .then((hal: D.Hal<D.LoginJSON>) => {
+                let link = {
+                    "self" : {
+                        "href" : "/user/"
+                    }
+                }
+                hal.Links = link;
+                res.json(hal);
+            }
+        );
     }
 }

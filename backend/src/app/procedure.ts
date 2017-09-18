@@ -13,7 +13,7 @@ import {MongoDao} from "./dao";
   * @param Y 出力とするクラス
   */
 export interface IProcedure<T,Y> {
-    exec(input: T): Y;
+    exec(input: T): Promise<Y>;
 }
 
 /**
@@ -24,6 +24,7 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
     /**
      * exec
      */
+    /*
     public exec(input: D.User): D.Hal<D.LoginJSON> {
         let hal = new D.Hal<D.LoginJSON>();
 
@@ -65,10 +66,51 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
         
         return hal;
     }
+    */
+    public exec(input: D.User): Promise<D.Hal<D.LoginJSON>> {
+        return new Promise<D.Hal<D.LoginJSON>>(resolve => {
+            let hal = new D.Hal<D.LoginJSON>();
+            
+            // 入力バリデート
+            if (input.Name === "" || input.Name === null || input.Password === "" || input.Password === null) {
+                // HAL格納 - 失敗情報
+                hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                hal.Embedded.StateDetail = "入力値不正:: name=<<" + input.Name + ">> password=<<" + input.Password + ">>";
+    
+                resolve(hal);
+            } else {
+                let db = new MongoDao();
 
-        /**
-     * exec
-     */
+//                input = db.Login(input);
+                db.Login(input)
+                .then((user: D.User) => {
+                    // ログイン成功後の処理
+
+                    // HAL格納 - 成功情報
+                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
+        
+                    let res = new D.LoginJSON();
+                    res.Token = input.Token;
+                    hal.Embedded.Response = res;
+                                
+                    resolve(hal);
+
+                }).catch((error: Error) => {
+                    // ログイン失敗時
+                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                    hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+                    
+                    resolve(hal);
+                    
+                });
+                
+            }
+            
+        });
+    }
+        
+
+    /*
     public async execAsync(input: D.User): Promise<Function> {
 
         let hal = new D.Hal<D.LoginJSON>();
@@ -113,5 +155,6 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
             }
         })
     }
+    */
 
 }
