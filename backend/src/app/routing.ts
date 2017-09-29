@@ -37,7 +37,7 @@ export abstract class RouterBase implements IRoutable {
      * constructor
      * コンストラクタ
      */
-        constructor(app: Application) {
+    constructor(app: Application) {
         this.__app = app;
     }
 
@@ -133,18 +133,14 @@ export class LoginAction extends RouterBase {
         return "/user";
     }
 
-    private get SubPathRoot(): string {
-        return "/";
-    }
-
     protected ConfigureRouter(router: Router) {
 
-        router.post(this.SubPathRoot, this.post);
+        router.put("/", this.put);
 
         return router;
     }
 
-    protected post(req:Request, res: Response): void {
+    protected put(req:Request, res: Response): void {
         let postData: {name: string, password: string} = req.body;
 
         // データ整形
