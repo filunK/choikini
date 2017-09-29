@@ -12,7 +12,6 @@
     
     rectangle "choikini-WebAPI" {
         usecase login as "ログインを受け付ける"
-        usecase logout as "ログアウトを受け付ける"
 
         usecase regist as "『ちょい気に』を登録する"
 
@@ -21,7 +20,6 @@
                                 『ちょい気に』を取得する"
 
         interface --> login
-        interface --> logout
         interface --> regist
         interface --> getChoikini
 
@@ -44,11 +42,6 @@
         【異常】
         ユーザkadokawaはパスワードPasswordを使用してログインAPIを実行。
         WebAPI側でログイン失敗となり、エラーのJSONを受け取った。
-
-    logout:ログアウトする
-        【正常１】
-        ユーザkadokawaはログアウトAPIを実行。
-        WebAPI側で正常に処理された旨をJSONで受け取った。
 
     regist:『ちょい気に』を登録する
         【正常１】

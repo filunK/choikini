@@ -4,6 +4,7 @@
     'コンポネント
     [WebInterface] as WEB
     [APServer] as AP
+    [AnalyzeAP] as ANALYZE
     [DataBase] as DB
 
     [NativeApps] as NATIVE
@@ -14,11 +15,13 @@
 
     'コンポネントとインターフェースの紐づけ
     api - AP
+    api -- ANALYZE
     connector - DB
 
     'コンポネントのリレーション
     WEB ..> api: use
     AP ..> connector: use
+    ANALYZE .> connector: use
 
     NATIVE ..> api: use
 

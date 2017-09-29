@@ -5,3 +5,4 @@ backend/coverage
 backend/karma.conf.js
 backend/src/exp/
 design/out
+design/01-requirement/01_requirement.pdf
