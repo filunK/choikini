@@ -6,7 +6,7 @@
 import {Application, Request, Response, Router,RouterOptions} from "express";
 
 import {RoutingError} from "./errors";
-import { Logger } from "./commons";
+import { Logger,Utils } from "./commons";
 
 import * as D from "./datamodel"
 import * as P from "./procedure"
@@ -118,7 +118,7 @@ export class OtameshiAction extends RouterBase {
 
 
 /**
- * ログインアクション
+ * Userアクション
  * 
  * リクエストオブジェクト: JSON
  * {
@@ -127,7 +127,7 @@ export class OtameshiAction extends RouterBase {
  * }
  * 
  */
-export class LoginAction extends RouterBase {
+export class UserAction extends RouterBase {
     
     protected get Path() : string {
         return "/user";
@@ -141,12 +141,20 @@ export class LoginAction extends RouterBase {
     }
 
     protected put(req:Request, res: Response): void {
-        let postData: {name: string, password: string} = req.body;
+        let putData: {name: string, password: string} = req.body;
+
+        // 取得値のバリデート
+        if (!Utils.IsAvailableValue(putData.name)) {
+            putData.name = "";
+        }
+        if (!Utils.IsAvailableValue(putData.password)) {
+            putData.password = "";
+        }
 
         // データ整形
         let user = new D.User();
-        user.Name = postData.name;
-        user.Password = postData.password;
+        user.Name = putData.name;
+        user.Password = putData.password;
 
         // 処理本体
         /*

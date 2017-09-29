@@ -98,6 +98,21 @@ export class Utils {
         return obj;
     }
 
+
+    /**
+     * IsAvailableValue<T>
+     * 指定した値が利用可能であるか→nullまやはundefinedではないかを確認する。
+     * @param {T} validateTarget: バリデート対象の変数
+     */
+    public static  IsAvailableValue<T>(validateTarget: T) : Boolean {
+
+        if (validateTarget == null || validateTarget == undefined) {
+            return false;
+        }
+
+        return true;
+    }
+
 }
 
 /**
