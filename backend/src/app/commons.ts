@@ -98,12 +98,6 @@ export class Utils {
         return obj;
     }
 
-    /**
-     * name
-     */
-    public name() {
-        
-    }
 }
 
 /**
@@ -125,7 +119,7 @@ export class Authentication {
      * generateSalt
      * パスワード情報のシードとなるSALTを生成する。
      */
-    public static generateSalt(): string {
+    public static GenerateSalt(): string {
 
         let enctypted: string = "";
 
@@ -145,15 +139,15 @@ export class Authentication {
      * @param requestSalt リクエストユーザのSALT
      * @param dbPw DBより取得したパスワード
      */
-    public static validatePassword(requestPw: string,requestSalt: string, dbPw: string) : boolean {
+    public static ValidatePassword(requestPw: string,requestSalt: string, dbPw: string) : boolean {
 
         let configure = Utils.GetConfig<IAuthConfig>("auth");
 
         // SALTのハッシュ化
-        let hash = Authentication.hasharize(configure.hash, requestSalt);
+        let hash = Authentication.Hasharize(configure.hash, requestSalt);
         
         // リクエストパスワードの暗号化
-        let chipperdPw = Authentication.cryptize(configure.crypto,hash,requestPw);
+        let chipperdPw = Authentication.Cryptize(configure.crypto,hash,requestPw);
         
         return chipperdPw === dbPw;
     }
@@ -162,15 +156,15 @@ export class Authentication {
      * トークンを生成する
      * @param seed 元となる文字列
      */
-    public static generateToken(seed: string): string {
+    public static GenerateToken(seed: string): string {
 
         let configure = Utils.GetConfig<IAuthConfig>("auth");
 
 
-        let salt = Authentication.generateSalt();
-        salt = Authentication.hasharize(configure.hash,salt);
+        let salt = Authentication.GenerateSalt();
+        salt = Authentication.Hasharize(configure.hash,salt);
 
-        let token = Authentication.cryptize(configure.crypto,salt, Date.now.toString() + seed);
+        let token = Authentication.Cryptize(configure.crypto,salt, Date.now.toString() + seed);
 
         return token;
     }
@@ -180,7 +174,7 @@ export class Authentication {
      * @param hashalgo ハッシュ化アルゴリズム
      * @param seed 入力となる文字列
      */
-    private static hasharize(hashalgo: string, seed: string): string {
+    private static Hasharize(hashalgo: string, seed: string): string {
         let hash = Crypto.createHash(hashalgo);
         hash.update(seed);
         return hash.digest("hex");
@@ -192,7 +186,7 @@ export class Authentication {
      * @param salt SALT。Authentication::hasharizeでハッシュ化すること。
      * @param seed 入力となる文字列
      */
-    private static cryptize(cryptoAlgo: string, salt: string, seed: string): string {
+    private static Cryptize(cryptoAlgo: string, salt: string, seed: string): string {
 
         let chiper = Crypto.createCipher(cryptoAlgo,salt);
         chiper.update(seed,"utf8","hex");
