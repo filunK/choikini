@@ -327,7 +327,7 @@ export class MongoDao implements IDao {
      */
     public constructor() {
 
-        let connectionInfo = Utils.getConfig<IDbConfig>("mongoose");
+        let connectionInfo = Utils.GetConfig<IDbConfig>("mongoose");
 
         let connectionString = "mongodb://" + connectionInfo.server + ":" + connectionInfo.port + "/" + connectionInfo.database;
         this.Connection = Mongoose.createConnection(connectionInfo.server,connectionInfo.database,connectionInfo.port,{

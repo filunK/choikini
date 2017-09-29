@@ -21,7 +21,7 @@ interface IAuthConfig {
 export class Logger {
 
     public static initialize() {
-        let configure = Utils.getConfig<Log4js.IConfig>("log4js");
+        let configure = Utils.GetConfig<Log4js.IConfig>("log4js");
         Log4js.configure(configure);
     }
 
@@ -90,12 +90,19 @@ export class Utils {
      * @param T 取得するオブジェクト構造
      * @param key キーとなる要素
      */
-    public static getConfig<T>(key: string): T {
+    public static GetConfig<T>(key: string): T {
 
         let configure = Config.util.loadFileConfigs(Path.join(__dirname,"config"));
 
         let obj: T = <T>configure[key];
         return obj;
+    }
+
+    /**
+     * name
+     */
+    public name() {
+        
     }
 }
 
@@ -140,7 +147,7 @@ export class Authentication {
      */
     public static validatePassword(requestPw: string,requestSalt: string, dbPw: string) : boolean {
 
-        let configure = Utils.getConfig<IAuthConfig>("auth");
+        let configure = Utils.GetConfig<IAuthConfig>("auth");
 
         // SALTのハッシュ化
         let hash = Authentication.hasharize(configure.hash, requestSalt);
@@ -157,7 +164,7 @@ export class Authentication {
      */
     public static generateToken(seed: string): string {
 
-        let configure = Utils.getConfig<IAuthConfig>("auth");
+        let configure = Utils.GetConfig<IAuthConfig>("auth");
 
 
         let salt = Authentication.generateSalt();
