@@ -2,6 +2,7 @@
 * Dao
 */
 
+import {IDbConfig} from "./IConfig"
 import { User, UserAccess, ChoikiniList, ChoikiniEntity } from "./datamodel"
 import { DaoError } from "./errors"
 import {Utils, Authentication,Logger} from "./commons"
@@ -18,7 +19,7 @@ export interface IDao {
      * @param {User} user - 不完全なユーザオブジェクト。ユーザトークンが必須項目。
      * @return {User} 完全なユーザオブジェクト。
      */
-    SelectUser(user: User): User;
+    SelectUser(user: User): Promise<User>;
 
     /**
      * ログイン処理を行い、ユーザトークンを取得する。
@@ -41,17 +42,7 @@ export interface IDao {
      * @param {ChoikiniEntity} - 登録するエントリ
      * @throws DaoError
      */
-    RegistChoikini(user: User, choikini: ChoikiniEntity): void;
-}
-/**
- * configモジュール、キー「mongoose」のインターフェース
- */
-interface IDbConfig {
-    server: string, 
-    port: number, 
-    database: string, 
-    user: string, 
-    password: string 
+    RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<User>;
 }
 
 /**
@@ -63,6 +54,7 @@ export interface IUser extends Mongoose.Document {
     Password: {Salt: string, Encrypted: string};
     Token: string;
     Auth: number;
+    ChoikiniList: IChoikiniList;
 }
 
 /**
@@ -71,8 +63,18 @@ export interface IUser extends Mongoose.Document {
 export interface IChoikiniList extends Mongoose.Document {
     _id: string;
     UserId: Mongoose.Types.ObjectId;
-    choikinis: {EntryDate: Date, Entry: string}[]
+    Choikinis: {EntryDate: Date, Entry: string}[]
 }
+
+/**
+ * Update操作で返却されるオブジェクト
+ */
+interface IMongoResponse {
+    n: number;
+    nModified: number;
+    ok: number
+}
+
 
 /**
  * MongoDBへのDAO
@@ -80,12 +82,16 @@ export interface IChoikiniList extends Mongoose.Document {
 export class MongoDao implements IDao {
 
     private _connection: Mongoose.Connection;
+    /**
+     * コネクション
+     */
     private get Connection(): Mongoose.Connection { return this._connection }
     private set Connection(connection: Mongoose.Connection) { this._connection = connection }
 
     //private _connection: Mongoose.MongooseThenable;
     //private get Connection(): Mongoose.MongooseThenable { return this._connection }
     //private set Connection(connection: Mongoose.MongooseThenable) { this._connection = connection }
+
 
     /**
      * Userコレクションのスキーマ
@@ -101,6 +107,7 @@ export class MongoDao implements IDao {
                 },
                 Token: Mongoose.SchemaTypes.String,
                 Auth: {type: Mongoose.SchemaTypes.Number, default: 0 },
+                //ChoikiniList: {Type: Mongoose.SchemaTypes.ObjectId,ref: "ChoikiniList"},
             }
             , {
                 collection: "User"
@@ -114,7 +121,8 @@ export class MongoDao implements IDao {
     private get ChoikiniListSchema(): Mongoose.Schema {
         return new Mongoose.Schema(
             {
-                UserId: {Type: Mongoose.SchemaTypes.ObjectId,ref: "User"},
+                //UserId: {Type: Mongoose.SchemaTypes.ObjectId,ref: "User"},
+                UserId: Mongoose.SchemaTypes.ObjectId,
                 Choikinis: [ 
                     new Mongoose.Schema(
                         {
@@ -135,14 +143,48 @@ export class MongoDao implements IDao {
 
     /**
      * 不完全なUserから完全なUserを取得する。
-     * @param {User} user - 不完全なユーザオブジェクト。ユーザトークンが必須項目。
-     * @return {User} 完全なユーザオブジェクト。
+     * @param {User} user - 不完全なユーザオブジェクト。ユーザ名・ユーザトークンが必須項目。
+     * @return {User} 完全なユーザオブジェクト。ちょい気にリストは取得しない
      */
-    SelectUser(user: User): User {
+    async SelectUser(user: User): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
 
+            let userModel = this.GenerateUserModel();
+            
+            let condition = {
+                Name : user.Name,
+                Token: user.Token
+            }
 
-        return user;
+            userModel.findOne(condition,(err: Error, res: IUser) => {
+                // 取得エラーが発生していないか
+                if (err) {
+                    
+                    let parentStack: string;
+                    if (err.stack == undefined) {
+                        parentStack = "";
+                    } else {
+                        parentStack = err.stack;
+                    }
+                    reject(new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
+                }
+
+                // 取得データなし
+                if (res == null) {
+                    reject(new DaoError("該当ユーザなし::[username]" + user.Name));
+                } else {
+                    // TODO : 実装
+                    user.Id = res.id;
+                    user.Name = res.Name;
+                    user.Token = res.Token;
+                    user.Auth = res.Auth;
+
+                    resolve(user);
+                }
+            });
+        });
     }
+     
 
     /**
      * ログイン処理を行い、ユーザトークンを取得する。
@@ -151,7 +193,7 @@ export class MongoDao implements IDao {
     async Login(user: User): Promise<User>{
         return new Promise<User>((resolve,reject) => {
 
-            let userModel = this.Connection.model<IUser>("User",this.UserSchema,"User");
+            let userModel = this.GenerateUserModel();
             
             let condition = {
                 Name : user.Name
@@ -175,7 +217,7 @@ export class MongoDao implements IDao {
                     reject(new DaoError("該当ユーザなし::[username]" + user.Name));
                 } else {
                     // ユーザ認証
-                    if (Authentication.validatePassword(user.Password,res.Password.Salt,res.Password.Encrypted)) {
+                    if (Authentication.ValidatePassword(user.Password,res.Password.Salt,res.Password.Encrypted)) {
                         user.Name = res.Name;
                         user.Password = res.Password.Encrypted;
                         user.Auth = res.Auth;
@@ -210,7 +252,7 @@ export class MongoDao implements IDao {
     Logoff(user: User): boolean {
         let result = false;
         
-        let userModel = this.Connection.model<IUser>("User",this.UserSchema,"User");
+        let userModel = this.GenerateUserModel();
         
         let condition = {
             Name: user.Name,
@@ -247,13 +289,59 @@ export class MongoDao implements IDao {
 
     /**
      * ちょい気にを登録する
-     * @param {User} user - 登録対象ユーザ
-     * @param {ChoikiniEntity} - 登録するエントリ
+     * @param {User} user - 登録対象ユーザとその情報。ユーザ名・トークン、エントリが必須
+     * @param {ChoikiniEntity} choikini - 登録するちょい気にのエントリ
      * @throws DaoError
      */
-    RegistChoikini(user: User, choikini: ChoikiniEntity): void {
+    async RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<User>{
+        return new Promise<User>((resolve, reject) => {
+            let choikiniModel = this.GenerateChoikiniListModel();
 
+            let condition = {
+                UserId : Mongoose.Types.ObjectId(user.Id)
+            };
+
+            let updateParam = {
+                $set: {
+                    UserId: Mongoose.Types.ObjectId(user.Id),
+                },
+                $push: {
+                    Choikinis: {
+                        EntryDate: choikini.EntryDate,
+                        Entry: choikini.Entry
+                    }
+                }
+            };
+
+            let updateOption = {
+                safe : true,
+                upsert: true,
+                multi:false,
+                runValidators: true
+            } as Mongoose.ModelUpdateOptions;
+
+            choikiniModel.update(condition,updateParam,updateOption,(err: Error, raw: IMongoResponse) => {
+                // 取得エラーが発生していないか
+                if (err) {
+                    let parentStack: string;
+                    if (err.stack === undefined) {
+                        parentStack = "";
+                    } else {
+                        parentStack = err.stack;
+                    }
+                    reject(new DaoError("ちょい気に登録失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
+                }
+    
+                // 更新成功の確認
+                if (raw.ok != 1) {
+                    reject(new DaoError("ちょい気に登録時ドキュメントなし::", user));
+                }
+
+                resolve(user);
+            });
+        });
     }
+    
 
     /**
      * トークンを生成・登録する
@@ -264,7 +352,7 @@ export class MongoDao implements IDao {
     protected async UpdateToken(user: User, salt: string): Promise<User>{
         return new Promise<User>((resolve, reject) => {
             
-            user.Token = Authentication.generateToken(user.Name);
+            user.Token = Authentication.GenerateToken(user.Name);
         
             let userModel = this.Connection.model<IUser>("User",this.UserSchema,"User");
             
@@ -286,9 +374,9 @@ export class MongoDao implements IDao {
                 upsert: false,
                 multi : false,
                 runValidators: true
-            }
+            } as Mongoose.ModelUpdateOptions;
             
-            userModel.update(condition,updateParam,opt,(err: Error, raw: {nModified: number}) => {
+            userModel.update(condition,updateParam,opt,(err: Error, raw: IMongoResponse) => {
                 // 取得エラーが発生していないか
                 if (err) {
                     let parentStack: string;
@@ -320,6 +408,22 @@ export class MongoDao implements IDao {
             throw new DaoError("接続解除に失敗");
         })
     }
+
+    /**
+     * Mongooseモデル：Userを生成
+     */
+    private GenerateUserModel(): Mongoose.Model<IUser> {
+        return this.Connection.model<IUser>("User",this.UserSchema,"User");
+    } 
+
+    /**
+     * Mongooseモデル：ChoikiniListを生成
+     */
+    private GenerateChoikiniListModel(): Mongoose.Model<IChoikiniList> {
+        return this.Connection.model<IChoikiniList>("ChoikiniList", this.ChoikiniListSchema,"ChoikiniList");
+    }
+
+
 
     /**
      * @constructor

@@ -199,6 +199,32 @@ export class ChoikiniEntity {
     }
 }
 
+/**
+ * ちょい気にを登録するのに使用する情報をまとめたもの。
+ */
+export class ChikiniRegistInfo {
+
+    private user: User;
+    private entry: ChoikiniEntity;
+
+    /**
+     * ユーザ
+     */
+    public get User(): User { return this.user; }
+    public set User(user: User) { this.user = user; }
+
+    /**
+     * 登録するエントリ
+     */
+    public get Entry(): ChoikiniEntity { return this.entry; }
+    public set Entry(entry: ChoikiniEntity) { this.entry = entry; }
+
+    public constructor() {
+        this.Entry = new ChoikiniEntity();
+        this.User = new User();
+    }
+
+}
 
 /**
  * HAL JSONオブジェクト実装
@@ -283,5 +309,51 @@ export class LoginJSON {
 
     public constructor() {
         this.Token = "";
+    }
+}
+
+/**
+ * choikini取得処理（単一ユーザ）のレスポンスに使用するJSON
+ */
+export class ChoikiniJSON {
+
+    private user: string;
+    private choikiniList: ChoikiniEntity[];
+    
+    /**
+     * ユーザ名
+     */
+    public get User(): string { return this.user; }
+    public set User(user: string) { this.user = user;}
+
+    /**
+     * ちょい気にリスト
+     */
+    public get ChoikiniList(): ChoikiniEntity[] { return this.choikiniList;}
+    public set ChoikiniList(list: ChoikiniEntity[]) {this.choikiniList = list;}
+
+
+    public constructor() {
+        this.User = "";
+        this.ChoikiniList = [];
+    }
+
+}
+
+/**
+ * 更新・挿入の成否に関するレスポンスに使用するJSON
+ */
+export class UpsertResultJSON {
+
+    private isProccessed: boolean;
+
+    /**
+     * ユーザ名
+     */
+    public get IsProcessed(): boolean { return this.isProccessed; }
+    public set IsProcessed(isProccessed: boolean) { this.isProccessed = isProccessed;}
+
+    public constructor() {
+        this.IsProcessed = false;
     }
 }

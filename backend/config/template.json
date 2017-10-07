@@ -1,4 +1,7 @@
 {
+    "application": {
+        "serverPort": "30000"
+    },
     "log4js": {
         "appenders": {
             "access": {

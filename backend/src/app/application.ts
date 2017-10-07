@@ -4,7 +4,8 @@ import * as Cluster from "cluster";
 import * as BodyParser from "body-parser";
 import { cpus } from "os";
 
-import {Logger} from "./commons";
+import {IAppConfig} from "./IConfig"
+import {Logger,Utils} from "./commons";
 import {ApplicationError} from "./errors"
 import * as Routing from "./routing";
 
@@ -64,8 +65,9 @@ class Application {
      * @param app Express.Applicationインターフェースの実装
      */
     private Configure(app:Express.Application):void {
+        let appConfig = Utils.GetConfig<IAppConfig>("application");
 
-        app.set('port', process.env.PORT || 30000);
+        app.set('port', appConfig.serverPort);
 
         // ロガーの変更
         Logger.initialize();
@@ -89,6 +91,7 @@ class Application {
         new Routing.IndexAction(app).RegistRoute();
         new Routing.OtameshiAction(app).RegistRoute();
         new Routing.UserAction(app).RegistRoute();
+        new Routing.ChoikiniAction(app).RegistRoute();
         
     }
 

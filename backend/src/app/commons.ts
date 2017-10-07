@@ -5,15 +5,9 @@ import * as Crypto from "crypto";
 import * as Config from "config";
 import * as Log4js from "log4js";
 
+import {IAuthConfig} from "./IConfig"
 import {User} from "./datamodel"
 
-/**
- * configモジュール、キー「auth」のインターフェース
- */
-interface IAuthConfig {
-    crypto: string,
-    hash: string
-}
 
 /**
  * ロガー

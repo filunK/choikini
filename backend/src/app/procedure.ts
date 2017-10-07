@@ -13,7 +13,7 @@ import {MongoDao} from "./dao";
   * @param Y 出力とするクラス
   */
 export interface IProcedure<T,Y> {
-    exec(input: T): Promise<Y>;
+    Exec(input: T): Promise<Y>;
 }
 
 /**
@@ -21,61 +21,15 @@ export interface IProcedure<T,Y> {
  */
 export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
 
-    /**
-     * exec
-     */
-    /*
-    public exec(input: D.User): D.Hal<D.LoginJSON> {
-        let hal = new D.Hal<D.LoginJSON>();
-
-        // 入力バリデート
-        if (input.Name === "" || input.Name === null || input.Password === "" || input.Password === null) {
-            // HAL格納 - 失敗情報
-            hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
-            hal.Embedded.StateDetail = "入力値不正:: name=<<" + input.Name + ">> password=<<" + input.Password + ">>";
-
-        } else {
-
-            let db = new MongoDao();
-            try {
-                
-                // ログイン処理
-                input = db.Login(input);
-                //input = db.LoginNative(input);
-    
-                // HAL格納 - 成功情報
-                hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
-    
-                let res = new D.LoginJSON();
-                res.Token = input.Token;
-                hal.Embedded.Response = res;
-    
-            } catch (error) {
-                // HAL格納 - 失敗情報
-                hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
-    
-                if (error instanceof Error) {
-                    hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
-                }
-                
-            } finally {
-                //db.Disconnect();
-            }
-        }
-
-        
-        return hal;
-    }
-    */
-    public exec(input: D.User): Promise<D.Hal<D.LoginJSON>> {
-        return new Promise<D.Hal<D.LoginJSON>>(resolve => {
+    public Exec(input: D.User): Promise<D.Hal<D.LoginJSON>> {
+        return new Promise<D.Hal<D.LoginJSON>>((resolve, reject) => {
             let hal = new D.Hal<D.LoginJSON>();
             
             // 入力バリデート
             if (input.Name === "" || input.Name === null || input.Password === "" || input.Password === null) {
                 // HAL格納 - 失敗情報
                 hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
-                hal.Embedded.StateDetail = "入力値不正:: name=<<" + input.Name + ">> password=<<" + input.Password + ">>";
+                hal.Embedded.StateDetail = "入力値不正:: ユーザ名,パスワード";
     
                 resolve(hal);
             } else {
@@ -108,53 +62,113 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
             
         });
     }
-        
+}
 
-    /*
-    public async execAsync(input: D.User): Promise<Function> {
+/**
+ * 単一ユーザのチョイ気にを取得する処理
+ */
+export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.ChoikiniJSON>> {
 
-        let hal = new D.Hal<D.LoginJSON>();
-        
-        // 入力バリデート
-        if (input.Name === "" || input.Name === null || input.Password === "" || input.Password === null) {
-            // HAL格納 - 失敗情報
-            hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
-            hal.Embedded.StateDetail = "入力値不正:: name=<<" + input.Name + ">> password=<<" + input.Password + ">>";
-
-        } else {
-
-            let db = new MongoDao();
-            try {
-                
-                // ログイン処理
-                input = await db.LoginPromise(input);
-    
-                // HAL格納 - 成功情報
-                hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
-    
-    
-            } catch (error) {
+    public Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON>> {
+        return new Promise<D.Hal<D.ChoikiniJSON>>((resolve,reject) => {
+            let hal = new D.Hal<D.ChoikiniJSON>();
+            
+            // 入力バリデート
+            if (input.Name === "" || input.Name === null || input.Token === "" || input.Token === null) {
                 // HAL格納 - 失敗情報
                 hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                hal.Embedded.StateDetail = "入力値不正:: ユーザ名,トークン";
     
-                if (error instanceof Error) {
+                resolve(hal);
+            } else {
+                let db = new MongoDao();
+
+                db.SelectUser(input)
+                .then((user: D.User) =>{
+                    // 成功時
+                    // HAL格納 - 成功情報
+                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
+                    
+                    let res = new D.ChoikiniJSON();
+                    res.User = user.Name;
+                    res.ChoikiniList = user.Choikinis.Choikinis;
+
+                    hal.Embedded.Response = res;
+                    
+                    resolve(hal);
+            
+                }).catch((error: Error) => {
+                    // 失敗時
+                    // ログイン失敗時
+                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
                     hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
-                }
-                
-            } finally {
-                db.Disconnect();
-            }
-        }
 
-        return new Promise<Function>(resolver => {
-
-            if (hal.Embedded.State == D.HAL_EMBEDDED_STATE.OK) {
-                let res = new D.LoginJSON();
-                res.Token = input.Token;
-                hal.Embedded.Response = res;
+                });
             }
-        })
+            
+        });
     }
-    */
 
+}
+
+/**
+ * チョイ気にを登録する処理
+ */
+export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, D.Hal<D.UpsertResultJSON>> {
+
+    public Exec(input: D.ChikiniRegistInfo): Promise<D.Hal<D.UpsertResultJSON>> {
+        return new Promise<D.Hal<D.UpsertResultJSON>>((resolve,reject) => {
+            let hal = new D.Hal<D.UpsertResultJSON>();
+            
+            // 入力バリデート
+            if (input.User.Name === "" || input.User.Name === null || input.User.Token === "" || input.User.Token === null) {
+                // HAL格納 - 失敗情報
+                hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                hal.Embedded.StateDetail = "入力値不正:: ユーザ名,トークン";
+    
+                resolve(hal);
+            } else if (input.Entry.Entry === "" || input.Entry.Entry === null) {
+                // HAL格納 - 失敗情報
+                hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                hal.Embedded.StateDetail = "登録するちょい気にがありません";
+    
+                resolve(hal);
+            } else {
+                let db = new MongoDao();
+
+                db.SelectUser(input.User)
+                .then((user : D.User) => {
+                    
+                    db.RegistChoikini(user,input.Entry)
+                    .then((usr: D.User) => {
+
+                        // HAL格納 - 成功情報
+                        hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
+
+                        let res = new D.UpsertResultJSON();
+                        res.IsProcessed = true;
+                        hal.Embedded.Response = res;
+
+                        resolve(hal);
+                    }).catch((error: Error) => {
+
+                        // 登録失敗(choikinilist)時
+                        hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                        hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+
+                        resolve(hal);
+                    });
+
+                }).catch((error: Error) => {
+
+                    // 対象ユーザ取得失敗時
+                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                    hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+
+                    resolve(hal);
+                });
+            }
+
+        });
+    }
 }
