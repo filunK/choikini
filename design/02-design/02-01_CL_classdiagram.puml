@@ -1,25 +1,41 @@
-@startuml
+@startuml 全体クラス図
 
-    
+    routing -- commons
+    procedure -- commons
+    dao -- commons
+    Application -- commons
     package commons <<Frame>> {
+        class Logger as "ロガー" {
+            +{static} void 初期化()
+            +{static} Handler ExpressJSロガー設定()
+            
+            +{static} void アクセスログInfo出力()
+            +{static} void アクセスログWarning出力()
+            +{static} void アクセスログError出力()
+            +{static} void システムログInfo出力()
+            +{static} void システムログWarning出力()
+            +{static} void システムログError出力()
+            +{static} void 警告ログ出力()
+            
+        }
+        
         class ユーティリティ {
+            +{static} T config取得<T>(キー: string)
+            +{static} boolean 利用可能性判定<T>(変数: T)
 
         }
 
         class 認証 {
-            +{static} string パスワード暗号化(string)
-            +{static} boolean バリデート(User)
+            +{static} string SALT文字列長
+            +{static} string SALTに使用する文字羅列
+            +{static} string SALT生成()
+            +{static} string パスワード妥当性検証(リクエストパスワード: string, リクエストSALT: string, 正パスワード: string)
             +{static} boolean ワンタイムトークン生成(User)
-            +{static} boolean ワンタイムトークン破棄(User)
+
+            +{static} string ハッシュ化(アルゴリズム名: string, シード値: string)
+            +{static} string 暗号化(アルゴリズム名: string, SALT値: string シード値: string)
         }
 
-        class Logger as "ロガー" {
-            +{static} void 情報ログ出力()
-            +{static} void 警告ログ出力()
-            +{static} void 異常ログ出力()
-            
-        }
-        
     }
     
     
@@ -31,92 +47,68 @@
 
     package routing <<Frame>> {
 
-        Application - IRoute
-        interface Express.IRoute as "URIルータ" {
+        Application -- IRoutable
+        interface IRoutable {
+            +void ルート登録()
+
         }
 
-        IRoute <|.. RouteBase
+        IRoutable <|.. RouteBase
         abstract class RouteBase as "基礎ルータ" {
             #{abstract}Path: string
-            +void ルート登録()
-            #{abstract}void get(req:Request, res:Responce, next:NextAction)
-            #{abstract}void post(req:Request, res:Responce, next:NextAction)
-            #{abstract}void put(req:Request, res:Responce, next:NextAction)
-            #{abstract}void delete(req:Request, res:Responce, next:NextAction)
+            #{abstract}void ルータ設定(ルータ： Express.Router)
         }
 
-        RouteBase <|-- Index
-        class Index as "/" {
+        RouteBase <|-- UserAction
+        class UserAction {
+            -[PUT]/login()
         }
 
-        RouteBase <|-- Login
-        class Login as "/login" {
-        }
-
-        RouteBase <|-- Logoff
-        class Logoff as "/logoff" {
-        }
-
-        RouteBase <|-- Choikini
-        class Choikini as "/choikini" {
+        RouteBase <|-- ChoikiniAction
+        class ChoikiniAction {
+            -[POST]/choikini/:user()
+            -[GET]/choikini/:user()
+            -[GET]/choikini()
         }
         
-        RouteBase <|-- ChoikiniAll
-        class ChoikiniAll as "/choikini-all" {
-        }
-
     }
     
-    
-    package actions <<Frame>> {
-        interface IActionable as "処理" {
-            +json 処理()
+    package procedure <<Frame>> {
+
+        UserAction -- IProcedure
+        ChoikiniAction -- IProcedure
+        interface IProcedure as "処理" {
+            +Promise<Y> 処理(入力: T)
         }
 
-        IActionable <|.. ActionBase
-        abstract class ActionBase as "処理ベース" {
-            +json 処理()
-            #boolean 認証検証()
-            #{abstract} 事前処理()
-            #{abstract} 本処理()
-            #{abstract} 事後処理()
+        IProcedure <|.. LoginProcedure
+        class LoginProcedure as "ログイン" {
         }
         
-        ActionBase <|-- LoginAction
-        class LoginAction as "ログイン" {
-        }
-        
-        ActionBase <|-- LogoffAction
-        class LogoffAction as "ログオフ" {
+        IProcedure <|.. GetChoikiniProcedure
+        class GetChoikiniProcedure as "ちょい気に取得" {
         }
 
-        ActionBase <|-- RegistAction
-        class RegistAction as "登録" {
+        IProcedure <|.. RegistChoikiniProcedure
+        class RegistChoikiniProcedure as "ちょい気に登録" {
         }
 
-        ActionBase <|-- SelectAction
-        class SelectAction as "取得" {
-        }
-
-        ActionBase <|-- SelectAllAction
-        class SelectAllAction as "全ちょい気に取得" {
+        IProcedure <|.. GetChoikiniAllProcedure
+        class GetChoikiniAllProcedure as "全ちょい気に取得" {
         }
 
     }
     
     
     
-    package database <<Frame>> {
+    package dao <<Frame>> {
 
-        ActionBase - Dao
-        LoginAction - Dao
-        LogoffAction - Dao
-        RegistAction - Dao
-        SelectAction - Dao
-        SelectAllAction - Dao
+        LoginProcedure -- Dao
+        GetChoikiniProcedure -- Dao
+        RegistChoikiniProcedure -- Dao
+        GetChoikiniAllProcedure -- Dao
         interface Dao as "DAO" {
             +ユーザ情報取得()
-            +ユーザトークン更新()
             +ログイン処理()
             +ログオフ処理()
             +ちょい気に登録()
@@ -124,27 +116,95 @@
             
         }
 
+        interface IUser as "ユーザドキュメント" {
+            + _id
+            + Name
+            + Password {Salt, Encrypted}
+            + Token
+            + Auth
+            + ChoikiniList: IChoikiniList
+        }
+
+        interface IChoikiniList as "ちょい気にリストドキュメント" {
+            + _id
+            + UserId
+            + Choikinis: {EntryDate, Entry}
+        }
+
         Dao <|.. MongoDao
         class MongoDao {
+            - コネクション
+            - Userスキーマ
+            - ChoikiniListスキーマ
+            * トークン更新()
+            - ユーザモデル生成()
+            - ちょい気にリストモデル生成()
         }
 
     }
     
-    
     package objectModels <<Frame>> {
         enum userAuthType as "ユーザ権限" {
             USUAL = 0
-            ADMINISTRATOR = 10
+            HIGH = 5
+            ADMINISTRATOR = 99
         }
-    
-        class User as "ユーザ" {
-            +ユーザ名:string
-            +パスワード:string
-            +ユーザトークン:string
-            +ユーザ権限:ユーザ情報
-            +ちょい気に:List
+
+        userAuthType -[hidden]down-- User
+        together {
+            class User as "ユーザ" {
+                + ユーザ名:string
+                + パスワード:string
+                + ユーザトークン:string
+                + ユーザ権限:ユーザ情報
+                + ちょい気に:List
+            }
+
+            userAuthType -[hidden]--> ChoikiniList
+            class ChoikiniList as "ちょい気にリスト" {
+                + Id
+                + ちょい気にリスト: ChoikiniEntity[]
+            }
+
+            ChoikiniList -- ChoikiniEntity
+            class ChoikiniEntity as "ちょい気にエンティティ" {
+                + 日時
+                + ちょい気に本文
+            }
+
+            class ChoikiniRegistInfo as "ちょい気に登録情報" {
+                + ユーザ
+                + ちょい気にエンティティ
+            }
+
         }
- 
+
+        together {
+            class Hal as "HALフォーマット" {
+                + _links
+                + _emdbed : HalEmbedded
+            }
+
+            class HalEmbedded as "HAL-Emdbed領域" {
+                + レスポンス状態
+                + レスポンス状態詳細
+                + レスポンス本体
+            }
+
+            class LoginJSON as "HAL-ログイン処理後情報" {
+                + token
+            }
+
+            class ChoikiniJSON as "HAL-ちょい気に情報" {
+                + user
+                + choikiniList: ChoikiniEntity[]
+            }
+
+            class UpsertResultJSON as "HAL-更新結果" {
+                + isProcessed
+            }
+
+        }
     }
 
 

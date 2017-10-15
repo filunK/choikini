@@ -1,4 +1,4 @@
-@startuml 02-01 REST APIのクライアントからの利用プロトコル
+@startuml 02-01_REST_APIのクライアントからの利用プロトコル
 
 hide footbox
 title 02-01 REST APIのクライアントからの利用プロトコル

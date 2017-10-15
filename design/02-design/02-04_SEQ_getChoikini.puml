@@ -1,0 +1,36 @@
+@startuml 02-04_ACT_ちょい気に取得
+hide footbox
+title 02-04 ちょい気に取得
+
+boundary ChoikiniAction as router
+control 取得処理 as procedure
+control DAO as dao
+database MongoDB as db
+
+[o-> router: [GET]ちょい気に取得
+activate router
+router -> router: リクエスト解析
+
+router -> procedure: 取得処理
+activate procedure
+
+procedure -> dao: ユーザ取得
+activate dao
+
+dao -> db: ユーザ取得
+dao <-- db: ユーザ
+procedure <-- dao: ユーザ
+
+procedure -> dao: ちょい気に取得（ユーザ）
+dao -> db: ちょい気に取得
+dao <-- db: ちょい気にリスト
+procedure <-- dao: ちょい気にリスト
+
+procedure -> procedure: オブジェクト整形
+
+router <-- procedure: HAL
+
+[<-- router: HAL
+
+
+@enduml

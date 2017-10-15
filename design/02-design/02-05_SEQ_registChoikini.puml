@@ -1,0 +1,36 @@
+@startuml 02-05_ACT_ちょい気に登録
+hide footbox
+title 02-05 ちょい気に登録
+
+boundary ChoikiniAction as router
+control 登録処理 as procedure
+control DAO as dao
+database MongoDB as db
+
+[o-> router: [POST]ちょい気に登録
+activate router
+router -> router: リクエスト解析
+
+router -> procedure: 登録処理
+activate procedure
+
+procedure -> dao: ユーザ取得
+activate dao
+
+dao -> db: ユーザ取得
+dao <-- db: ユーザ
+procedure <-- dao: ユーザ
+
+procedure -> dao: ちょい気に登録
+dao -> db: ちょい気に登録
+dao <-- db: 登録結果
+procedure <-- dao: 登録結果
+
+procedure -> procedure: オブジェクト整形
+
+router <-- procedure: HAL
+
+[<-- router: HAL
+
+
+@enduml
