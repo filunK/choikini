@@ -151,10 +151,10 @@ export class UserAction extends RouterBase {
         let requestData: {name: string, password: string} = req.body;
 
         // 取得値のバリデート
-        if (!Utils.IsAvailableValue(requestData.name)) {
+        if (!Utils.IsAvailableValue<string>(requestData.name)) {
             requestData.name = "";
         }
-        if (!Utils.IsAvailableValue(requestData.password)) {
+        if (!Utils.IsAvailableValue<string>(requestData.password)) {
             requestData.password = "";
         }
 
@@ -249,10 +249,10 @@ export class ChoikiniAction extends RouterBase {
         let token = req.headers[CONSTS.P_CHOIKINI_TOKEN] as string;
 
         // 取得値のバリデート
-        if (!Utils.IsAvailableValue(username)) {
+        if (!Utils.IsAvailableValue<string>(username)) {
             username = "";
         }
-        if (!Utils.IsAvailableValue(token)) {
+        if (!Utils.IsAvailableValue<string>(token)) {
             token = "";
         }
 
@@ -286,13 +286,13 @@ export class ChoikiniAction extends RouterBase {
         
         
         // 取得値のバリデート
-        if (!Utils.IsAvailableValue(username)) {
+        if (!Utils.IsAvailableValue<string>(username)) {
             username = "";
         }
-        if (!Utils.IsAvailableValue(token)) {
+        if (!Utils.IsAvailableValue<string>(token)) {
             token = "";
         }
-        if (!Utils.IsAvailableValue(requestData.choikini)) {
+        if (!Utils.IsAvailableValue<string>(requestData.choikini)) {
             requestData.choikini = "";
         }
 

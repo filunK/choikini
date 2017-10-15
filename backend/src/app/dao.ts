@@ -342,6 +342,60 @@ export class MongoDao implements IDao {
         });
     }
     
+    /**
+     * ユーザに紐づくチョイ気にを取得する。
+     * @param user SelectUserにて取得されたUser。User._idが必須
+     */
+    async SelectChoikini(user: User): Promise<User> {
+        return new Promise<User>((resolve, reject) => {
+            let choikiniModel = this.GenerateChoikiniListModel();
+            
+            let condition = {
+                UserId : Mongoose.Types.ObjectId(user.Id)
+            };
+
+            choikiniModel.findOne(condition,(err: Error, res: IChoikiniList) => {
+                // 取得エラーが発生していないか
+                if (err) {
+                    
+                    let parentStack: string;
+                    if (err.stack == undefined) {
+                        parentStack = "";
+                    } else {
+                        parentStack = err.stack;
+                    }
+                    reject(new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
+                }
+
+                // 取得データなし
+                if (res == null) {
+                    reject(new DaoError("該当ちょい気になし::[username]" + user.Name));
+                } else {
+
+                    let container = new ChoikiniList();
+                    container.Id = res._id;
+
+                    container.Choikinis = new Array(0);
+                    res.Choikinis.forEach((element, index, array) => {
+
+                        let entity = new ChoikiniEntity();
+                        entity.EntryDate = element.EntryDate;
+                        entity.Entry = element.Entry;
+
+                        container.Choikinis.push(entity);
+                    });
+
+                    user.Choikinis = container;
+
+                    resolve(user);
+                }
+
+            });
+            
+
+        })
+        }
+
 
     /**
      * トークンを生成・登録する

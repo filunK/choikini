@@ -84,26 +84,40 @@ export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.Choikini
                 let db = new MongoDao();
 
                 db.SelectUser(input)
-                .then((user: D.User) =>{
-                    // 成功時
-                    // HAL格納 - 成功情報
-                    hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
-                    
-                    let res = new D.ChoikiniJSON();
-                    res.User = user.Name;
-                    res.ChoikiniList = user.Choikinis.Choikinis;
+                .then((user: D.User) => {
 
-                    hal.Embedded.Response = res;
-                    
-                    resolve(hal);
-            
+                    // ちょい気に取得処理
+                    db.SelectChoikini(user)
+                    .then((user: D.User) => {
+
+                        // HAL格納 - 成功情報
+                        hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
+                        
+                        let res = new D.ChoikiniJSON();
+                        res.User = user.Name;
+                        res.ChoikiniList = user.Choikinis.Choikinis;
+
+                        hal.Embedded.Response = res;
+                        
+                        resolve(hal);
+
+                    }).catch((error: Error) => {
+
+                        // ちょい気に取得失敗時
+                        hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                        hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+
+                        resolve(hal);
+                    });
+
                 }).catch((error: Error) => {
-                    // 失敗時
-                    // ログイン失敗時
+                    // ユーザ取得失敗時
                     hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
                     hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
 
+                    resolve(hal);
                 });
+
             }
             
         });
