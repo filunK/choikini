@@ -43,6 +43,14 @@ export interface IDao {
      * @throws DaoError
      */
     RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<User>;
+
+    /**
+     * ユーザにひもづくちょい気にを取得する。
+     * @param {User} user: 対象ユーザ
+     * @throws DaoError
+     */
+    SelectChoikini(user: User): Promise<User>;
+
 }
 
 /**
