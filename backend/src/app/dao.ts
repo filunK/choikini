@@ -42,7 +42,7 @@ export interface IDao {
      * @param {ChoikiniEntity} - 登録するエントリ
      * @throws DaoError
      */
-    RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<User>;
+    RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<void>;
 
     /**
      * ユーザにひもづくちょい気にを取得する。
@@ -155,42 +155,40 @@ export class MongoDao implements IDao {
      * @return {User} 完全なユーザオブジェクト。ちょい気にリストは取得しない
      */
     async SelectUser(user: User): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
 
-            let userModel = this.GenerateUserModel();
+        let userModel = this.GenerateUserModel();
+
+        let condition = {
+            Name : user.Name,
+            Token: user.Token
+        }
+
+        try {
+            let res = await userModel.findOne(condition).exec();
             
-            let condition = {
-                Name : user.Name,
-                Token: user.Token
-            }
-
-            userModel.findOne(condition,(err: Error, res: IUser) => {
-                // 取得エラーが発生していないか
-                if (err) {
-                    
-                    let parentStack: string;
-                    if (err.stack == undefined) {
-                        parentStack = "";
-                    } else {
-                        parentStack = err.stack;
-                    }
-                    reject(new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
-                }
-
                 // 取得データなし
                 if (res == null) {
-                    reject(new DaoError("該当ユーザなし::[username]" + user.Name));
+                    throw new DaoError("該当ユーザなし::[username]" + user.Name);
+
                 } else {
-                    // TODO : 実装
+                    // 取得データあり
                     user.Id = res.id;
                     user.Name = res.Name;
                     user.Token = res.Token;
                     user.Auth = res.Auth;
 
-                    resolve(user);
                 }
-            });
-        });
+        } catch (error) {
+            let parentStack: string;
+            if (error.stack == undefined) {
+                parentStack = "";
+            } else {
+                parentStack = error.stack;
+            }
+            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+        }
+    
+        return user;
     }
      
 
@@ -199,57 +197,47 @@ export class MongoDao implements IDao {
      * @param user 
      */
     async Login(user: User): Promise<User>{
-        return new Promise<User>((resolve,reject) => {
 
-            let userModel = this.GenerateUserModel();
-            
-            let condition = {
-                Name : user.Name
-            }
-            userModel.findOne(condition,(err: Error, res: IUser) => {
-                
-                // 取得エラーが発生していないか
-                if (err) {
-                    
-                    let parentStack: string;
-                    if (err.stack == undefined) {
-                        parentStack = "";
-                    } else {
-                        parentStack = err.stack;
-                    }
-                    reject(new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
-                }
-
-                // 取得データなし
-                if (res == null) {
-                    reject(new DaoError("該当ユーザなし::[username]" + user.Name));
-                } else {
-                    // ユーザ認証
-                    if (Authentication.ValidatePassword(user.Password,res.Password.Salt,res.Password.Encrypted)) {
-                        user.Name = res.Name;
-                        user.Password = res.Password.Encrypted;
-                        user.Auth = res.Auth;
-                        user.Id = res._id.toString();
-                        
-                        this.UpdateToken(user, res.Password.Salt)
-                        .then(user => {
-                            
-                            resolve(user);
-
-                        }).catch((error: Error) => {
-                            reject(error);
-                        });
-                    } else {
-                        reject(new DaoError("パスワード相違", user));
-                    }
-
-                    }
-
-            });
-                            
-        });
-
+        let userModel = this.GenerateUserModel();
         
+        let condition = {
+            Name : user.Name
+        }
+
+        try {
+            let res = await userModel.findOne(condition).exec();
+
+            // 取得データなし
+            if (res == null) {
+                throw new DaoError("該当ユーザなし::[username]" + user.Name);
+
+            } else {
+                // ユーザ認証
+                if (Authentication.ValidatePassword(user.Password,res.Password.Salt,res.Password.Encrypted)) {
+                    user.Name = res.Name;
+                    user.Password = res.Password.Encrypted;
+                    user.Auth = res.Auth;
+                    user.Id = res._id.toString();
+
+                    user = await this.UpdateToken(user, res.Password.Salt);
+
+                } else {
+                    throw new DaoError("パスワード相違", user);
+                }
+            }
+        
+            
+        } catch (error) {
+            let parentStack: string;
+            if (error.stack == undefined) {
+                parentStack = "";
+            } else {
+                parentStack = error.stack;
+            }
+            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+        }
+
+        return user;        
     }
 
     /**
@@ -301,53 +289,51 @@ export class MongoDao implements IDao {
      * @param {ChoikiniEntity} choikini - 登録するちょい気にのエントリ
      * @throws DaoError
      */
-    async RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<User>{
-        return new Promise<User>((resolve, reject) => {
-            let choikiniModel = this.GenerateChoikiniListModel();
+    async RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<void>{
+        let choikiniModel = this.GenerateChoikiniListModel();
 
-            let condition = {
-                UserId : Mongoose.Types.ObjectId(user.Id)
-            };
+        let condition = {
+            UserId : Mongoose.Types.ObjectId(user.Id)
+        };
 
-            let updateParam = {
-                $set: {
-                    UserId: Mongoose.Types.ObjectId(user.Id),
-                },
-                $push: {
-                    Choikinis: {
-                        EntryDate: choikini.EntryDate,
-                        Entry: choikini.Entry
-                    }
+        let updateParam = {
+            $set: {
+                UserId: Mongoose.Types.ObjectId(user.Id),
+            },
+            $push: {
+                Choikinis: {
+                    EntryDate: choikini.EntryDate,
+                    Entry: choikini.Entry
                 }
-            };
+            }
+        };
 
-            let updateOption = {
-                safe : true,
-                upsert: true,
-                multi:false,
-                runValidators: true
-            } as Mongoose.ModelUpdateOptions;
+        let updateOption = {
+            safe : true,
+            upsert: true,
+            multi:false,
+            runValidators: true
+        } as Mongoose.ModelUpdateOptions;
 
-            choikiniModel.update(condition,updateParam,updateOption,(err: Error, raw: IMongoResponse) => {
-                // 取得エラーが発生していないか
-                if (err) {
-                    let parentStack: string;
-                    if (err.stack === undefined) {
-                        parentStack = "";
-                    } else {
-                        parentStack = err.stack;
-                    }
-                    reject(new DaoError("ちょい気に登録失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
-                }
-    
-                // 更新成功の確認
-                if (raw.ok != 1) {
-                    reject(new DaoError("ちょい気に登録時ドキュメントなし::", user));
-                }
+        try {
+            let row = await choikiniModel.update(condition,updateParam,updateOption).exec() as IMongoResponse;
+            
+            // 更新成功の確認
+            if (row.ok != 1) {
+                throw new DaoError("ちょい気に登録時ドキュメントなし::", user);
+            }
 
-                resolve(user);
-            });
-        });
+        } catch (error) {
+            
+            let parentStack: string;
+            if (error.stack === undefined) {
+                parentStack = "";
+            } else {
+                parentStack = error.stack;
+            }
+            throw new DaoError("ちょい気に登録失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+        }
+
     }
     
     /**
@@ -355,110 +341,97 @@ export class MongoDao implements IDao {
      * @param user SelectUserにて取得されたUser。User._idが必須
      */
     async SelectChoikini(user: User): Promise<User> {
-        return new Promise<User>((resolve, reject) => {
-            let choikiniModel = this.GenerateChoikiniListModel();
+        let choikiniModel = this.GenerateChoikiniListModel();
+
+        let condition = {
+            UserId : Mongoose.Types.ObjectId(user.Id)
+        };
+
+        try {
+            let choikinis = await choikiniModel.findOne(condition).exec();
+
+            // 取得データなし
+            if (choikinis == null) {
+                throw new DaoError("該当ちょい気になし::[username]" + user.Name);
+
+            } else {
+                // データあり
+                let container = new ChoikiniList();
+                container.Id = choikinis._id;
+
+                container.Choikinis = new Array(0);
+                choikinis.Choikinis.forEach((element, index, array) => {
+
+                    let entity = new ChoikiniEntity();
+                    entity.EntryDate = element.EntryDate;
+                    entity.Entry = element.Entry;
+
+                    container.Choikinis.push(entity);
+                });
+
+                user.Choikinis = container;
+            }
             
-            let condition = {
-                UserId : Mongoose.Types.ObjectId(user.Id)
-            };
-
-            choikiniModel.findOne(condition,(err: Error, res: IChoikiniList) => {
-                // 取得エラーが発生していないか
-                if (err) {
-                    
-                    let parentStack: string;
-                    if (err.stack == undefined) {
-                        parentStack = "";
-                    } else {
-                        parentStack = err.stack;
-                    }
-                    reject(new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
-                }
-
-                // 取得データなし
-                if (res == null) {
-                    reject(new DaoError("該当ちょい気になし::[username]" + user.Name));
-                } else {
-
-                    let container = new ChoikiniList();
-                    container.Id = res._id;
-
-                    container.Choikinis = new Array(0);
-                    res.Choikinis.forEach((element, index, array) => {
-
-                        let entity = new ChoikiniEntity();
-                        entity.EntryDate = element.EntryDate;
-                        entity.Entry = element.Entry;
-
-                        container.Choikinis.push(entity);
-                    });
-
-                    user.Choikinis = container;
-
-                    resolve(user);
-                }
-
-            });
-            
-
-        })
+        } catch (error) {
+            let parentStack: string;
+            if (error.stack == undefined) {
+                parentStack = "";
+            } else {
+                parentStack = error.stack;
+            }
+            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
         }
+
+        return user;
+    }
 
 
     /**
      * トークンを生成・登録する
      * @param user ユーザ名が入ったUserオブジェクト
      * @param salt 
-     * @return Promise<User
      */
     protected async UpdateToken(user: User, salt: string): Promise<User>{
-        return new Promise<User>((resolve, reject) => {
+
+        user.Token = Authentication.GenerateToken(user.Name);
+
+        let userModel = this.GenerateUserModel();;
+        let condition = {
+            "_id" : Mongoose.Types.ObjectId(user.Id),
+            "Name" : user.Name,
+            "Password.Encrypted": user.Password
+        };
+        let updateParam = {
+            $set: {
+                Token: user.Token
+            }
+        };
+        let opt = {
+            safe: true,
+            upsert: false,
+            multi : false,
+            runValidators: true
+        } as Mongoose.ModelUpdateOptions;
+
+        try {
+            let raw = await userModel.update(condition,updateParam,opt).exec() as IMongoResponse;
+
+            // 更新成功の確認
+            if (raw.nModified == 0) {
+                throw new DaoError("Token更新時ドキュメントなし::", user);
+            }
             
-            user.Token = Authentication.GenerateToken(user.Name);
-        
-            let userModel = this.Connection.model<IUser>("User",this.UserSchema,"User");
-            
-            let condition = {
-                "_id" : Mongoose.Types.ObjectId(user.Id),
-                "Name" : user.Name,
-                "Password.Encrypted": user.Password
-            };
-    
-    
-            let updateParam = {
-                $set: {
-                    Token: user.Token
-                }
-            };
-    
-            let opt = {
-                safe: true,
-                upsert: false,
-                multi : false,
-                runValidators: true
-            } as Mongoose.ModelUpdateOptions;
-            
-            userModel.update(condition,updateParam,opt,(err: Error, raw: IMongoResponse) => {
-                // 取得エラーが発生していないか
-                if (err) {
-                    let parentStack: string;
-                    if (err.stack === undefined) {
-                        parentStack = "";
-                    } else {
-                        parentStack = err.stack;
-                    }
-                    reject(new DaoError("Token更新失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::"));
-                }
-    
-                // 更新成功の確認
-                if (raw.nModified == 0) {
-                    reject(new DaoError("Token更新時ドキュメントなし::", user));
-                }
-                resolve(user);
-                
-            });
-               
-        });
+        } catch (error) {
+            let parentStack: string;
+            if (error.stack === undefined) {
+                parentStack = "";
+            } else {
+                parentStack = error.stack;
+            }
+            throw new DaoError("Token更新失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+        }
+
+        return user;
     }
         
         /**

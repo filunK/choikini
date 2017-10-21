@@ -16,6 +16,7 @@ import * as P from "./procedure"
  */
 class CONSTS {
     public static P_CHOIKINI_TOKEN: string = "p-choikini-token";
+    public static P_CHOIKINI_USER: string = "p-choikini-user";
 }
 
 /**
@@ -147,7 +148,7 @@ export class UserAction extends RouterBase {
         return router;
     }
 
-    protected put(req:Request, res: Response): void {
+    protected async put(req:Request, res: Response): Promise<void> {
         let requestData: {name: string, password: string} = req.body;
 
         // 取得値のバリデート
@@ -163,19 +164,18 @@ export class UserAction extends RouterBase {
         user.Name = requestData.name;
         user.Password = requestData.password;
 
+        let link = {
+            self : {
+                href : "/user"
+            }
+        };
+
         // 処理本体
         let login = new P.LoginProcedure();
-        login.Exec(user)
-            .then((hal: D.Hal<D.LoginJSON>) => {
-                let link = {
-                    self : {
-                        href : "/user"
-                    }
-                };
-                hal.Links = link;
-                res.json(hal);
-            }
-        );
+        let hal = await login.Exec(user)
+
+        hal.Links = link;
+        res.json(hal);
     }
 }
 
@@ -186,9 +186,10 @@ export class UserAction extends RouterBase {
  * メソッド：GET
  * リクエストオブジェクト：PLAIN
  * リクエストヘッダ：
- * | key             | value          |
- * |----------------:|:---------------|
- * |p-choikini-token | one-time token |
+ * | key             | value                |
+ * |----------------:|:---------------------|
+ * |p-choikini-token | one-time token       |
+ * |p-choikini-user  | Request user name    |
  * 
  * URIパラメータ：
  * | key  | value     |
@@ -242,7 +243,12 @@ export class ChoikiniAction extends RouterBase {
         return router;
     }
 
-    protected GetChoikini(req: Request, res: Response): void {
+    /**
+     * ユーザのちょい気にを取得する
+     * @param req 
+     * @param res 
+     */
+    protected async GetChoikini(req: Request, res: Response): Promise<void> {
 
         // パラメータ取得
         let username = req.params.user;
@@ -260,25 +266,50 @@ export class ChoikiniAction extends RouterBase {
         user.Name = username;
         user.Token = token;
 
+        let link = {
+            self : {
+                href : "/choikini/" + username
+            }
+        };
+
         let getChoikini = new P.GetChoikiniProcedure();
-        getChoikini.Exec(user)
-        .then((hal: D.Hal<D.ChoikiniJSON>) => {
-            let link = {
-                self : {
-                    href : "/choikini/" + username
-                }
-            };
-            hal.Links = link;
-            res.json(hal);
-    });
+        let hal = await getChoikini.Exec(user);
+
+        hal.Links = link;
+        res.json(hal);
     }
 
-    protected GetAllChoikini(req: Request, res: Response): void {
+    /**
+     * 全ユーザのチョイ気にを取得する
+     * @param req 
+     * @param res 
+     */
+    protected async GetAllChoikini(req: Request, res: Response): Promise<void> {
+
+        // パラメータ取得
+        let username = req.headers[CONSTS.P_CHOIKINI_USER] as string;
+        let token = req.headers[CONSTS.P_CHOIKINI_TOKEN] as string;
+
+        // 取得値のバリデート
+        if (!Utils.IsAvailableValue<string>(username)) {
+            username = "";
+        }
+        if (!Utils.IsAvailableValue<string>(token)) {
+            token = "";
+        }
+        
+
+
         // TOD: 実装
         throw new Error("未実装");
     }
 
-    protected RegistChoikini(req: Request, res: Response): void {
+    /**
+     * ちょい気にを登録する
+     * @param req 
+     * @param res 
+     */
+    protected async RegistChoikini(req: Request, res: Response): Promise<void> {
         // パラメータ取得
         let username = req.params.user;
         let token = req.headers[CONSTS.P_CHOIKINI_TOKEN] as string;
@@ -309,18 +340,16 @@ export class ChoikiniAction extends RouterBase {
         info.User = user;
         info.Entry = entity;
 
+        let link = {
+            self : {
+                href : "/choikini/" + user.Name
+            }
+        };
+
         let register = new P.RegistChoikiniProcedure();
-        register.Exec(info)
-        .then((hal: D.Hal<D.UpsertResultJSON>) => {
+        let hal = await register.Exec(info);
 
-            let link = {
-                self : {
-                    href : "/choikini/" + user.Name
-                }
-            };
-            hal.Links = link;
-            res.json(hal);
-
-        });
+        hal.Links = link;
+        res.json(hal);
     }
 }
