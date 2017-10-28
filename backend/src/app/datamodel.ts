@@ -61,63 +61,39 @@ export class User implements MongoObject {
     private choikinis: ChoikiniList;
     
     /**
-     * [getter]ドキュメントID
+     * ドキュメントID
      */
     public get Id(): string | undefined { return this.id; }
-
-    /**
-     * [setter]ドキュメントID
-     */
     public set Id(id: string | undefined) { this.id = id; }
 
     /**
-     * [gettter]ユーザ名
+     * ユーザ名
      */
     public get Name(): string { return this.name; }
-
-    /**
-     * [setter]ユーザ名
-     */
     public set Name(name: string) { this.name = name; }
 
     /**
-     * [gettter]パスワード
+     * パスワード
      */
     public get Password(): string { return this.password; }
-    
-    /**
-     * [setter]パスワード
-     */
     public set Password(password: string) { this.password = password; }
     
     /**
-     * [gettter]アクセス権限
+     * アクセス権限
      */
     public get Auth(): UserAccess { return this.auth; }
-    
-    /**
-     * [setter]アクセス権限
-     */
     public set Auth(auth: UserAccess) { this.auth = auth; }
 
     /**
-     * [gettter]パスワード
+     * トークン
      */
     public get Token(): string { return this.token; }
-    
-    /**
-     * [setter]パスワード
-     */
     public set Token(token: string) { this.token = token; }
 
     /**
-     * [gettter]パスワード
+     * ちょい気にリスト
      */
     public get Choikinis(): ChoikiniList { return this.choikinis; }
-    
-    /**
-     * [setter]パスワード
-     */
     public set Choikinis(choikinis: ChoikiniList) { this.choikinis = choikinis; }
 
 
@@ -125,7 +101,12 @@ export class User implements MongoObject {
      * コンストラクタ
      */
     constructor() {
-
+        this.Id = "";
+        this.Name = "";
+        this.Password = "";
+        this.Auth = UserAccess.USUAL;
+        this.Token = "";
+        this.Choikinis = new ChoikiniList();
     }
 }
 
@@ -140,27 +121,20 @@ export class ChoikiniList implements MongoObject {
     private choikinis: ChoikiniEntity[];
     
     /**
-     * [getter]ドキュメントID
+     * ドキュメントID
      */
     public get Id(): string { return this.id; }
-    
-    /**
-     * [setter]ドキュメントID
-     */
     public set Id(id: string) { this.id = id; }
     
     /**
-     * [getter]ちょい気にリスト
+     * ちょい気にリスト
      */
     public get Choikinis():ChoikiniEntity[] { return this.choikinis}
-
-    /**
-     * [setter]ちょい気にリスト
-     */
     public set Choikinis(choikinis: ChoikiniEntity[]) {this.choikinis = choikinis}
 
     constructor() {
-
+        this.Id = "";
+        this.Choikinis = [];
     }
 }
 

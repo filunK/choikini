@@ -6,7 +6,7 @@ import * as Config from "config";
 import * as Log4js from "log4js";
 
 import {IAuthConfig} from "./IConfig"
-import {User} from "./datamodel"
+import {User,UserAccess} from "./datamodel"
 
 
 /**
@@ -176,6 +176,22 @@ export class Authentication {
         let token = Authentication.Cryptize(configure.crypto,salt, Date.now.toString() + seed);
 
         return token;
+    }
+
+    /**
+     * 指定された権限が高権限以上であるかどうか判定する。
+     * @param auth ユーザ権限
+     */
+    public static IsHigherAuth(auth: UserAccess) : boolean{
+        return auth >= UserAccess.HIGH;        
+    }
+
+    /**
+     * 指定された権限が管理者権限であるかどうか判定する。
+     * @param auth ユーザ権限
+     */
+    public static IsAdmin(auth: UserAccess) : boolean{
+        return auth == UserAccess.ADMINISTRATOR;        
     }
 
     /**

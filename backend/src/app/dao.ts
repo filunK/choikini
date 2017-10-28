@@ -51,6 +51,10 @@ export interface IDao {
      */
     SelectChoikini(user: User): Promise<User>;
 
+    /**
+     * ちょい気にに登録されているユーザ・ちょい気にを全て取得する。
+     */
+    SelectAll():Promise<User[]>
 }
 
 /**
@@ -179,13 +183,7 @@ export class MongoDao implements IDao {
 
                 }
         } catch (error) {
-            let parentStack: string;
-            if (error.stack == undefined) {
-                parentStack = "";
-            } else {
-                parentStack = error.stack;
-            }
-            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+            throw new DaoError(error);
         }
     
         return user;
@@ -228,13 +226,7 @@ export class MongoDao implements IDao {
         
             
         } catch (error) {
-            let parentStack: string;
-            if (error.stack == undefined) {
-                parentStack = "";
-            } else {
-                parentStack = error.stack;
-            }
-            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+            throw new DaoError(error);
         }
 
         return user;        
@@ -331,7 +323,7 @@ export class MongoDao implements IDao {
             } else {
                 parentStack = error.stack;
             }
-            throw new DaoError("ちょい気に登録失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+            throw new DaoError(error);
         }
 
     }
@@ -373,18 +365,44 @@ export class MongoDao implements IDao {
             }
             
         } catch (error) {
-            let parentStack: string;
-            if (error.stack == undefined) {
-                parentStack = "";
-            } else {
-                parentStack = error.stack;
-            }
-            throw new DaoError("SELECT失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+            throw new DaoError(error);
         }
 
         return user;
     }
 
+    async SelectAll():Promise<User[]> {
+        let fullList: User[] = [];
+
+        let userModel = this.GenerateUserModel();
+        let choikiniListModel = this.GenerateChoikiniListModel();
+
+        let userCondition = {};
+
+        try {
+            let users = await userModel.find(userCondition).exec();
+
+            for (let i = 0; i < users.length; i++) {
+                let element = users[i];
+                
+                let user = new User();
+                user.Id = element._id;
+                user.Name = element.Name;
+                user.Token = element.Token;
+                user.Auth = element.Auth;
+
+                user = await this.SelectChoikini(user);
+
+                fullList.push(user);
+            }
+
+        } catch (error) {
+            throw new DaoError(error);
+        }
+
+        return fullList;
+    }
+    
 
     /**
      * トークンを生成・登録する
@@ -422,26 +440,10 @@ export class MongoDao implements IDao {
             }
             
         } catch (error) {
-            let parentStack: string;
-            if (error.stack === undefined) {
-                parentStack = "";
-            } else {
-                parentStack = error.stack;
-            }
-            throw new DaoError("Token更新失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + parentStack + "::");
+            throw new DaoError(error);
         }
 
         return user;
-    }
-        
-        /**
-     * 接続を外す
-     */
-    public Disconnect() {
-        this.Connection.close((err: Error) => {
-            Logger.LogError("fail Disconnect");
-            throw new DaoError("接続解除に失敗");
-        })
     }
 
     /**
@@ -457,8 +459,6 @@ export class MongoDao implements IDao {
     private GenerateChoikiniListModel(): Mongoose.Model<IChoikiniList> {
         return this.Connection.model<IChoikiniList>("ChoikiniList", this.ChoikiniListSchema,"ChoikiniList");
     }
-
-
 
     /**
      * @constructor

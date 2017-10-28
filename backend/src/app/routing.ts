@@ -297,11 +297,22 @@ export class ChoikiniAction extends RouterBase {
         if (!Utils.IsAvailableValue<string>(token)) {
             token = "";
         }
-        
 
+        let user = new D.User();
+        user.Name = username;
+        user.Token = token;
 
-        // TOD: 実装
-        throw new Error("未実装");
+        let link = {
+            self : {
+                href : "/choikini/"
+            }
+        };
+
+        let getAll = new P.GetAllChoikiniProcedure();
+        let hal = await getAll.Exec(user);
+
+        hal.Links = link;
+        res.json(hal);
     }
 
     /**

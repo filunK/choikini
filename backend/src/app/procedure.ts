@@ -5,15 +5,29 @@
 import * as D from "./datamodel";
 import * as E from "./errors";
 import {MongoDao} from "./dao";
+import {Authentication} from "./commons";
 
 
  /**
-  * 手続きのテンプレート
+  * 手続きのインターフェース
   * @param T 入力とするクラス
   * @param Y 出力とするクラス
   */
 export interface IProcedure<T,Y> {
     Exec(input: T): Promise<Y>;
+}
+
+/**
+ * 手続きの基礎クラス
+  * @param T 入力とするクラス
+  * @param Y 出力とするクラス
+ */
+export abstract class ProcedureBase<T,Y> implements IProcedure<T,Y> {
+    abstract Exec(input: T): Promise<Y>;
+
+    protected async Logoff(user: D.User) {
+
+    }
 }
 
 /**
@@ -150,11 +164,46 @@ export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, 
  */
 export class GetAllChoikiniProcedure implements IProcedure<D.User, D.Hal<D.ChoikiniJSON[]>> {
     
-    public Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON[]>> {
-        return new Promise<D.Hal<D.ChoikiniJSON[]>>((resolve,reject) => {
+    public async Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON[]>> {
+        let hal = new D.Hal<D.ChoikiniJSON[]>();
 
-            throw new Error("未実装");
-        });
+        try {
+            let db = new MongoDao();
+            
+            // ユーザ判定
+            let user = await db.SelectUser(input);
+
+            // 高権限である場合のみ処理続行
+            if (Authentication.IsHigherAuth(user.Auth)) {
+
+                let list = await db.SelectAll();
+
+                // データ整形
+                let fullList: D.ChoikiniJSON[] = [];
+                list.forEach((value, index, array) => {
+
+                    let entity = new D.ChoikiniJSON();
+                    entity.User = value.Name;
+                    entity.ChoikiniList = value.Choikinis.Choikinis;
+
+                    fullList.push(entity);
+                });
+
+                hal.Embedded.State = D.HAL_EMBEDDED_STATE.OK;
+                hal.Embedded.Response = fullList;
+
+            } else {
+                hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+                hal.Embedded.StateDetail = "当該ユーザには権限が不足しています。::" + user.Name;
+            }
+        } catch (error) {
+            // 処理失敗時
+            hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
+            hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+        }
+
+
+        return hal;
     }
 }
             
