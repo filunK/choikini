@@ -1,5 +1,5 @@
-@startuml 02-04_ACT_ちょい気に取得
-    title ちょい気に取得
+@startuml 02-06_ACT_ちょい気に取得
+    title 全ちょい気に取得
 
     start
     partition ルーティング {
@@ -18,24 +18,27 @@
                 
             endif
 
-            :ユーザの_idに紐づくちょい気にを取得;
+            if (ログインユーザの権限は不足している?) then (yes)
+                :処理エラー「ユーザ権限不正」;
+                stop
+            endif
+
+            :全ユーザのちょい気にを取得;
             if (取得処理例外発生?) then (yes)
                 :処理エラー「ちょい気に取得失敗」;
                 stop
                 
             endif
 
-            :ちょい気にのリストをUserオブジェクトに格納;
+            :全ユーザのちょい気にのリストをオブジェクトに格納;
         }
 
         if (例外ない?) then (yes)
-            :Userオブジェクトから\nHAL生成;
+            :オブジェクトから\nHAL生成;
         else (no)
             :Errorオブジェクトから\nHAL生成;
         endif
         
     }
     end
-    
-
 @enduml

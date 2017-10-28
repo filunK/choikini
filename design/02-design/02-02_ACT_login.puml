@@ -1,5 +1,5 @@
 @startuml 02-02_ACT_ログイン処理
-title 02-02 ログイン処理
+title ログイン処理
     start
     
     partition ルーティング {

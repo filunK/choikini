@@ -1,6 +1,6 @@
 @startuml 02-04_ACT_ちょい気に取得
 hide footbox
-title ちょい気に取得
+title 全ちょい気に取得
 
 boundary ChoikiniAction as router
 control 取得処理 as procedure
@@ -21,8 +21,10 @@ dao -> db: ユーザ取得
 dao <-- db: ユーザ
 procedure <-- dao: ユーザ
 
-procedure -> dao: ちょい気に取得（ユーザ）
-dao -> db: ちょい気に取得
+procedure -> procedure: アクセス権限チェック
+
+procedure -> dao: 全ちょい気に取得
+dao -> db: 全ちょい気に取得
 dao <-- db: ちょい気にリスト
 procedure <-- dao: ちょい気にリスト
 

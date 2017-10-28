@@ -1,7 +1,7 @@
 @startuml 02-03_SEQ_ログオフ処理
 hide footbox
 
-title 02-03 ログオフ処理
+title ログオフ処理
 
 control 処理 as procedure
 control DAO as dao

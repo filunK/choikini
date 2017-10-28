@@ -1,5 +1,5 @@
 @startuml 02-03_ACT_ログオフ処理
-title 02-03 ログオフ処理
+title ログオフ処理
     start
     
     partition 処理 {

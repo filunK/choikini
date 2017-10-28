@@ -1,5 +1,5 @@
 @startuml 02-05_ACT_ちょい気に登録
-    title 02-05 ちょい気に登録
+    title ちょい気に登録
 
     start
     partition ルーティング {

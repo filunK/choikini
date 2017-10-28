@@ -1,7 +1,7 @@
 @startuml 02-02_SEQ_ログイン処理
 hide footbox
 
-title 02-02 ログイン処理
+title ログイン処理
 
 control LoginAction as router
 control ログイン処理 as procedure
