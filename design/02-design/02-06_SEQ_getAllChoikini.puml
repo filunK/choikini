@@ -1,4 +1,4 @@
-@startuml 02-04_ACT_ちょい気に取得
+@startuml 02-06_SEQ_ちょい気に取得
 hide footbox
 title 全ちょい気に取得
 
