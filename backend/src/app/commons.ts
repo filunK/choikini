@@ -122,7 +122,7 @@ export class Authentication {
     /**
      * 生成Saltに含める文字列
      */
-    public static get SALT_CHARSET(): string { return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/!?-=^~|[{]}@`:*";}
+    public static get SALT_CHARSET(): string { return "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-=^~|[{]}@:*";}
     
     /**
      * generateSalt
