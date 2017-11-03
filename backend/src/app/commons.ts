@@ -86,7 +86,7 @@ export class Utils {
      */
     public static GetConfig<T>(key: string): T {
 
-        let configure = Config.util.loadFileConfigs(Path.join(__dirname,"config"));
+        let configure = Config.util.loadFileConfigs(Path.join(process.cwd(),"config"));
 
         let obj: T = <T>configure[key];
         return obj;
