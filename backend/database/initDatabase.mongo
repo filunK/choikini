@@ -13,6 +13,8 @@ adminDB.createUser(
     }
 );
 
+var adminDB = db.getMongo().getDB("choikini")
+
 adminDB.createUser(
     {
         user: "choikini",
