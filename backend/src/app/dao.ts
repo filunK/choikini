@@ -34,7 +34,7 @@ export interface IDao {
      * @param {User} user - ユーザトークンを設定したUserオブジェクト
      * @return {boolean} ログオフ成否
      */
-    Logoff(user: User): boolean;
+    Logoff(user: User): Promise<void>;
 
     /**
      * ちょい気にを登録する
@@ -235,10 +235,9 @@ export class MongoDao implements IDao {
     /**
      * ログオフ処理を行い、ユーザトークンを削除する。
      * @param {User} user - ユーザトークンを保持するUserオブジェクト
-     * @return {boolean} ログオフ成否
+     * @throws DaoError
      */
-    Logoff(user: User): boolean {
-        let result = false;
+    async Logoff(user: User): Promise<void> {
         
         let userModel = this.GenerateUserModel();
         
@@ -258,21 +257,19 @@ export class MongoDao implements IDao {
             upsert: false,
             multi : false,
             runValidators: true
+        } as Mongoose.ModelUpdateOptions
+
+        try {
+            let row = await userModel.update(condition,updateParam,opt).exec() as IMongoResponse;
+
+            if (row.nModified == 0) {
+                throw new DaoError("Token削除に失敗::", user);
+            }
+            
+        } catch (error) {
+            throw new DaoError(error);
         }
 
-        
-        userModel.update(condition,updateParam,opt,(err: Error, raw: any) => {
-            // 取得エラーが発生していないか
-            if (err) {
-                Logger.LogError("Token更新失敗::" + "::ユーザ名::" + user.Name + "::トレース::" + err.stack + "::")
-                result = false;
-            }
-
-            result = true;
-
-        });
-
-        return result;
     }
 
     /**
@@ -432,10 +429,10 @@ export class MongoDao implements IDao {
         } as Mongoose.ModelUpdateOptions;
 
         try {
-            let raw = await userModel.update(condition,updateParam,opt).exec() as IMongoResponse;
+            let row = await userModel.update(condition,updateParam,opt).exec() as IMongoResponse;
 
             // 更新成功の確認
-            if (raw.nModified == 0) {
+            if (row.nModified == 0) {
                 throw new DaoError("Token更新時ドキュメントなし::", user);
             }
             

@@ -5,7 +5,7 @@
 import * as D from "./datamodel";
 import * as E from "./errors";
 import {MongoDao} from "./dao";
-import {Authentication} from "./commons";
+import {Authentication, Logger} from "./commons";
 
 
  /**
@@ -14,7 +14,7 @@ import {Authentication} from "./commons";
   * @param Y 出力とするクラス
   */
 export interface IProcedure<T,Y> {
-    Exec(input: T): Promise<Y>;
+     Exec(input: T): Promise<Y>;
 }
 
 /**
@@ -23,10 +23,28 @@ export interface IProcedure<T,Y> {
   * @param Y 出力とするクラス
  */
 export abstract class ProcedureBase<T,Y> implements IProcedure<T,Y> {
-    abstract Exec(input: T): Promise<Y>;
+    abstract async Exec(input: T): Promise<Y>;
 
-    protected async Logoff(user: D.User) {
+    /**
+     * ログオフ処理を行う
+     * @param user ログオフ対象ユーザ
+     */
+    protected async Logoff(user: D.User): Promise<boolean> {
+        let result: boolean = false
 
+        try {
+            let db = new MongoDao();
+
+            await db.Logoff(user);
+
+            result = true;
+            
+        } catch (error) {
+            Logger.LogSystemWarning("ログオフ失敗::" + user.Id);
+            result = false;
+        }
+
+        return result;
     }
 }
 
@@ -71,7 +89,7 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
 /**
  * 単一ユーザのチョイ気にを取得する処理
  */
-export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.ChoikiniJSON>> {
+export class GetChoikiniProcedure extends ProcedureBase<D.User, D.Hal<D.ChoikiniJSON>> {
 
     public async Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON>> {
         let hal = new D.Hal<D.ChoikiniJSON>();
@@ -83,11 +101,12 @@ export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.Choikini
                 hal.Embedded.StateDetail = "入力値不正:: ユーザ名,トークン";
     
             } else {
+                let user : D.User | undefined | null;
 
                 try {
                     let db = new MongoDao();
 
-                    let user = await db.SelectUser(input);
+                    user = await db.SelectUser(input);
                     user = await db.SelectChoikini(user);
 
                     // HAL格納 - 成功情報
@@ -104,6 +123,12 @@ export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.Choikini
                     // 処理失敗時
                     hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
                     hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+                } finally {
+
+                    // どちらにせよログオフ処理
+                    if (user instanceof D.User) {
+                        await this.Logoff(user);
+                    }
                 }
             }
         
@@ -116,7 +141,7 @@ export class GetChoikiniProcedure implements IProcedure<D.User, D.Hal<D.Choikini
 /**
  * チョイ気にを登録する処理
  */
-export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, D.Hal<D.UpsertResultJSON>> {
+export class RegistChoikiniProcedure extends ProcedureBase<D.ChikiniRegistInfo, D.Hal<D.UpsertResultJSON>> {
 
     public async Exec(input: D.ChikiniRegistInfo): Promise<D.Hal<D.UpsertResultJSON>> {
         let hal = new D.Hal<D.UpsertResultJSON>();
@@ -133,11 +158,12 @@ export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, 
             hal.Embedded.StateDetail = "登録するちょい気にがありません";
 
         } else {
-
+            let user : D.User | undefined | null;
+            
             try {
                 let db = new MongoDao();
 
-                let user = await db.SelectUser(input.User);
+                user = await db.SelectUser(input.User);
                 await db.RegistChoikini(user,input.Entry);
 
                 // HAL格納 - 成功情報
@@ -152,6 +178,12 @@ export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, 
                 // 処理失敗時
                 hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
                 hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+            } finally {
+    
+                // どちらにせよログオフ処理
+                if (user instanceof D.User) {
+                    await this.Logoff(user);
+                }
             }
         }
 
@@ -162,16 +194,18 @@ export class RegistChoikiniProcedure implements IProcedure<D.ChikiniRegistInfo, 
 /**
  * 全ユーザのチョイ気にを取得する処理
  */
-export class GetAllChoikiniProcedure implements IProcedure<D.User, D.Hal<D.ChoikiniJSON[]>> {
+export class GetAllChoikiniProcedure extends ProcedureBase<D.User, D.Hal<D.ChoikiniJSON[]>> {
     
     public async Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON[]>> {
         let hal = new D.Hal<D.ChoikiniJSON[]>();
 
+        let user : D.User | undefined | null;
+        
         try {
             let db = new MongoDao();
             
             // ユーザ判定
-            let user = await db.SelectUser(input);
+            user = await db.SelectUser(input);
 
             // 高権限である場合のみ処理続行
             if (Authentication.IsHigherAuth(user.Auth)) {
@@ -200,8 +234,14 @@ export class GetAllChoikiniProcedure implements IProcedure<D.User, D.Hal<D.Choik
             // 処理失敗時
             hal.Embedded.State = D.HAL_EMBEDDED_STATE.NG;
             hal.Embedded.StateDetail = error.name + "::" + error.message + "::" + error.stack;
+        } finally {
+            
+            // どちらにせよログオフ処理
+            if (user instanceof D.User) {
+                await this.Logoff(user);
+            }
         }
-
+        
 
         return hal;
     }
