@@ -1,0 +1,27 @@
+
+// 管理ユーザの追加
+
+var adminDB = db.getMongo().getDB("admin")
+
+adminDB.createUser(
+    {
+        user: "admin",
+        pwd: "masterkey",
+        roles: [
+            "root"
+        ]
+    }
+);
+
+adminDB.createUser(
+    {
+        user: "choikini",
+        pwd: "choikini_masterkey",
+        roles: [
+            {
+                role: "dbOwner",
+                db: "choikini"
+            }
+        ]
+    }
+);

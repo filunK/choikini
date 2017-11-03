@@ -1,0 +1,182 @@
+
+
+// インサート対象ユーザリスト
+var userNames = [
+    "admin",
+    "kadokawa",
+    "hayakawa"
+];
+
+
+/*
+ユーザコレクションのリスト
+
+| username  | password  |
+|----------:|:---------:|
+| admin     | password  |
+| kadokawa  | password  |
+| hayakawa  | password  |
+
+*/
+var userList = {
+    "admin":{
+        "_id" : ObjectId("000000000000000000000001"), 
+        "Name" : "admin", 
+        "Password" : { 
+            "Salt" : "nx:5[UH1Tl", 
+            "Encrypted" : "2866c8c246f4e70c15c4a5476df5b784" // password
+        }, 
+        "Token" : "", 
+        "Auth" : 99 
+    },
+    "kadokawa": {
+        "_id" : ObjectId("000000000000000000000002"), 
+        "Name" : "kadokawa", 
+        "Password" : { 
+            "Salt" : "Ovs:F8@L|J", 
+            "Encrypted" : "663e49611909c83373b6eae711b42ae1" // password
+        }, 
+        "Token" : "", 
+        "Auth" : 0 
+    },
+    "hayakawa": {
+        "_id" : ObjectId("000000000000000000000003"), 
+        "Name" : "hayakawa", 
+        "Password" : { 
+            "Salt" : "alc4Ju{-l6", 
+            "Encrypted" : "deb5fd4dcf8ea0704e5e0cd7cd8b986f" // password
+        }, 
+        "Token" : "", 
+        "Auth" : 5 
+    }
+};
+
+
+// ちょい気にのリスト
+var choikiniList = {
+    "admin" : {
+        "document": {
+            "UserId" : ObjectId("000000000000000000000001"), 
+            "Choikinis" : []
+        }
+    },
+    "kadokawa" : {
+        "document": { 
+            "UserId" : ObjectId("000000000000000000000002"), 
+            "Choikinis" : []
+        }
+    },
+    "hayakawa" : {
+        "document": {
+            "UserId" : ObjectId("000000000000000000000003"), 
+            "Choikinis" : []
+        }
+    }
+};
+
+// ちょい気に出力の設定
+var choikiniConfig = {
+    "admin": {
+        "count": 0,             // どれだけのダミーエントリを作成するか
+        "baseDate": new Date()  // ダミーエントリの日付
+    },
+    "kadokawa": {
+        "count": 4,
+        "baseDate": new Date()
+    },
+    "hayakawa": {
+        "count": 100,
+        "baseDate": new Date()
+    }
+};
+
+
+
+/**
+ * 初期化
+ * Userコレクション・Choikinisコレクションを削除する
+ */
+var init = function(database) {
+    shellPrint("init")
+    database.User.drop();
+    database.ChoikiniList.drop();
+    
+}
+
+/**
+ * ユーザを保存する
+ */
+var saveUsers = function(database) {
+    shellPrint("saveUsers")
+
+    for (var index = 0; index < userNames.length; index++) {
+        var user = userNames[index]
+        saveUser(database,user);
+    }
+
+}
+
+var saveUser = function(database,username) {
+    shellPrint("saveUser::" + username)
+
+    var doc = userList[username];
+
+    database.User.save(doc);
+}
+
+/**
+ * チョイ気にを保存する
+ */
+var saveChoikinis = function(database) {
+    shellPrint("saveChoikinis")
+
+    for (var index = 0; index < userNames.length; index++) {
+
+        var user = userNames[index]
+
+        saveChoikini(database,user);
+        
+    }
+}
+
+/**
+ * ユーザ一人分のチョイ気にを登録
+ */
+var saveChoikini = function(database,username) {
+    shellPrint("saveChoikini::" + username)
+    var doc = choikiniList[username].document;
+
+    doc.Choikinis = createChoikinis(choikiniConfig[username]);
+
+    database.ChoikiniList.save(doc);
+}
+
+var createChoikinis = function(config) {
+    var genedList = [];
+
+    var count = config.count;
+    var datetime = config.baseDate;
+
+    for (var i = 0; i < count; i++) {
+
+        var displayCount = i + 1;
+        var content = {
+            "EntryDate" : datetime,
+            "Entry": "テスト用ちょい気にメッセージ-----" + displayCount
+        }
+        
+        genedList.push(content);
+    }
+
+    return genedList;
+}
+
+
+///////////////////////////////////////////
+var choikiniDB = db.getMongo().getDB("choikini")
+
+init(choikiniDB);
+saveUsers(choikiniDB);
+saveChoikinis(choikiniDB);
+
+
