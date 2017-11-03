@@ -15,7 +15,7 @@ import {User,UserAccess} from "./datamodel"
 export class Logger {
 
     public static initialize() {
-        let configure = Utils.GetConfig<Log4js.IConfig>("log4js");
+        let configure = Utils.GetConfig<Log4js.Configuration>("log4js");
         Log4js.configure(configure);
     }
 
@@ -69,7 +69,7 @@ export class Logger {
      */
     public static getExpressLogger(): Handler{
         return Log4js.connectLogger(Log4js.getLogger("access"),{
-            level: Log4js.levels.INFO
+            level: "INFO"
         });
     }
 }
