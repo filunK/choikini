@@ -51,7 +51,7 @@ class Application {
         this.Route(app);
         this.HandleError(app);
 
-        Http.createServer(app).listen(
+        app.listen(
             app.get('port'),
             function() {
                 Logger.LogAccessInfo('Express server listening on port ' + app.get('port'));
