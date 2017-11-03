@@ -462,6 +462,7 @@ export class MongoDao implements IDao {
      * @throws DaoError
      */
     public constructor() {
+        (<any>Mongoose).Promise = global.Promise;
 
         let connectionInfo = Utils.GetConfig<IDbConfig>("mongoose");
 
@@ -470,6 +471,7 @@ export class MongoDao implements IDao {
             useMongoClient: true,
             user: connectionInfo.user,
             pass: connectionInfo.password,
+            promiseLibrary: global.Promise,
             db : {
                 native_parser: true
             },
