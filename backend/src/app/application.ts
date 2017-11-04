@@ -32,7 +32,7 @@ class Application {
         this.Route(app);
         this.HandleError(app);
 
-        app.listen(() => {
+        app.listen(app.get("port"),() => {
                 Logger.LogAccessInfo('Express server listening on port ' + app.get('port'));
             });
     }
