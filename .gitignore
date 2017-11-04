@@ -8,3 +8,4 @@ design/out
 design/01-requirement/01_requirement.pdf
 design/02-design/02_design.pdf
 backend/config/production.json
+backend/release
