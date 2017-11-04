@@ -1,0 +1,19 @@
+{
+    "apps": [
+        {
+            "name"        : "choikini_bk",
+            "script"      : "./bin/app/application.js",
+            "instances"  : 0,
+            "watch"     : true,
+            "exec_mode"  : "cluster",
+            "source_map_support": true,
+            "env": {
+                "PORT": 30000,
+                "NODE_ENV": "development"
+            },
+            "env_production" : {
+                "NODE_ENV": "production"
+            }
+        }
+    ]
+}
