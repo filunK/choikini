@@ -1,8 +1,3 @@
-/**
- * routing.ts
- * URIとロジックをひも付け、制御する。
- */
-
 import {Application, Request, Response, Router,RouterOptions} from "express";
 
 import {RoutingError} from "./errors";
@@ -11,50 +6,103 @@ import { Logger,Utils } from "./commons";
 import * as D from "./datamodel"
 import * as P from "./procedure"
 
+
 /**
- * 定数
+ * routingにて使用する定数
+ * 
+ * @class CONSTS
  */
 class CONSTS {
+    /**
+     * headerキー：p_choikini_token
+     * トークンが保存されるキー
+     * 
+     * @static
+     * @type {string}
+     * @memberOf CONSTS
+     */
     public static P_CHOIKINI_TOKEN: string = "p-choikini-token";
+
+    /**
+     * headerキー：p_choikini_user
+     * 処理を要求するユーザ
+     * 
+     * @static
+     * @type {string}
+     * @memberOf CONSTS
+     */
     public static P_CHOIKINI_USER: string = "p-choikini-user";
 }
 
+
 /**
- * IRoutable
- * ルーティングを制御するクラスが実装すべきメソッドを規定します。
+ * ルーティングを制御するためのインターフェース
+ * 
+ * @export
+ * @interface IRoutable
  */
 export interface IRoutable {
 
     /**
-     * registRoute
-     * ルーティングをExpress.Applicationに登録します。
+     * ルーティングを登録する。
+     * 
+     * 
+     * @memberOf IRoutable
      */
     RegistRoute(): void;
 }
 
 /**
- * RouterBase
  * ルーティング制御の基底クラス。
+ * 
+ * @export
+ * @abstract
+ * @class RouterBase
+ * @implements {IRoutable}
  */
 export abstract class RouterBase implements IRoutable {
 
     private __app:Application;
+
+    /**
+     * ルーティングのルートリソース
+     * 
+     * @readonly
+     * @protected
+     * @abstract
+     * @type {string}
+     * @memberOf RouterBase
+     */
     protected abstract get Path(): string;
 
     /**
-     * constructor
-     * コンストラクタ
+     * Creates an instance of RouterBase.
+     * @param {Application} app Expressjsのインスタンス
+     * 
+     * @memberOf RouterBase
      */
     constructor(app: Application) {
         this.__app = app;
     }
 
     /**
-     * ConfigureRouter
      * Routerオブジェクトの設定を行います。
+     * 
+     * @protected
+     * @abstract
+     * @param {Router} router 
+     * @returns {Router} 
+     * 
+     * @memberOf RouterBase
      */
     protected abstract ConfigureRouter(router: Router): Router;
     
+    /**
+     * ルーティングを登録する。
+     * 
+     * 
+     * @memberOf RouterBase
+     */
     public RegistRoute(): void {
         let pathlength = this.Path.length
 
@@ -80,14 +128,35 @@ export abstract class RouterBase implements IRoutable {
 }
 
 /**
- * IndexAction
+ * リソース「/」のアクションを規定
+ * 
+ * @export
+ * @class IndexAction
+ * @extends {RouterBase}
  */
 export class IndexAction extends RouterBase {
 
+    /**
+     * ルートリソースパス
+     * 
+     * @readonly
+     * @protected
+     * @type {string}
+     * @memberOf IndexAction
+     */
     protected get Path(): string {
         return "/";
     }
 
+    /**
+     * ルーティングを設定する
+     * 
+     * @protected
+     * @param {Router} router 
+     * @returns {Router} 
+     * 
+     * @memberOf IndexAction
+     */
     protected ConfigureRouter(router: Router): Router {
         
         router.get("/", this.get);
@@ -95,6 +164,15 @@ export class IndexAction extends RouterBase {
         return router;
     }
 
+    /**
+     * GETに対する処理
+     * 
+     * @private
+     * @param {Request} req 
+     * @param {Response} res 
+     * 
+     * @memberOf IndexAction
+     */
     private get(req:Request, res: Response): void {
         res.send('Hello choikini World!');
         Logger.LogSystemInfo("index accessed......");
@@ -103,30 +181,10 @@ export class IndexAction extends RouterBase {
 }
 
 /**
- * OtameshiAction
+ * 
  */
-export class OtameshiAction extends RouterBase {
-    
-    protected get Path(): string {
-        return "/otameshi";
-    }
-
-    protected ConfigureRouter(router: Router): Router {
-
-        router.get("/", this.get);
-        return router;
-    }
-
-    protected get(req:Request, res: Response): void {
-        res.send('OTAMESHI---Hello choikini World!---OTAMESHI');
-        Logger.LogSystemInfo("otameshi accessed......");
-    }
-    
-}
-
-
 /**
- * Userアクション
+ * リソース「/user」へのアクション
  * 
  * リクエストオブジェクト: JSON
  * {
@@ -134,13 +192,34 @@ export class OtameshiAction extends RouterBase {
  *  password: string => パスワード
  * }
  * 
+ * 
+ * @export
+ * @class UserAction
+ * @extends {RouterBase}
  */
 export class UserAction extends RouterBase {
     
+    /**
+     * ルートリソース
+     * 
+     * @readonly
+     * @protected
+     * @type {string}
+     * @memberOf UserAction
+     */
     protected get Path() : string {
         return "/user";
     }
 
+    /**
+     * ルーティングを設定する。
+     * 
+     * @protected
+     * @param {Router} router 
+     * @returns 
+     * 
+     * @memberOf UserAction
+     */
     protected ConfigureRouter(router: Router) {
 
         router.put("/", this.put);
@@ -148,6 +227,16 @@ export class UserAction extends RouterBase {
         return router;
     }
 
+    /**
+     * PUTに対する処理
+     * 
+     * @protected
+     * @param {Request} req 
+     * @param {Response} res 
+     * @returns {Promise<void>} 
+     * 
+     * @memberOf UserAction
+     */
     protected async put(req:Request, res: Response): Promise<void> {
         let requestData: {name: string, password: string} = req.body;
 
@@ -180,7 +269,7 @@ export class UserAction extends RouterBase {
 }
 
 /**
- * Choikiniアクション
+ * リソース「/choikini」に対するアクション
  * 
  * URI:/choikini
  * メソッド：GET
@@ -226,13 +315,34 @@ export class UserAction extends RouterBase {
  *  choikini: string => ちょい気に本文
  * }
  * 
+ * 
+ * @export
+ * @class ChoikiniAction
+ * @extends {RouterBase}
  */
 export class ChoikiniAction extends RouterBase {
 
+    /**
+     * ルートリソース
+     * 
+     * @readonly
+     * @protected
+     * @type {string}
+     * @memberOf ChoikiniAction
+     */
     protected get Path(): string {
         return "/choikini";
     }
 
+    /**
+     * ルーティングを設定する。
+     * 
+     * @protected
+     * @param {Router} router 
+     * @returns 
+     * 
+     * @memberOf ChoikiniAction
+     */
     protected ConfigureRouter(router: Router) {
 
         router.get("/", this.GetAllChoikini);
@@ -244,9 +354,14 @@ export class ChoikiniAction extends RouterBase {
     }
 
     /**
-     * ユーザのちょい気にを取得する
-     * @param req 
-     * @param res 
+     * GETの処理：ユーザのちょい気にを取得する。
+     * 
+     * @protected
+     * @param {Request} req リクエスト
+     * @param {Response} res レスポンス
+     * @returns {Promise<void>} 
+     * 
+     * @memberOf ChoikiniAction
      */
     protected async GetChoikini(req: Request, res: Response): Promise<void> {
 
@@ -280,9 +395,14 @@ export class ChoikiniAction extends RouterBase {
     }
 
     /**
-     * 全ユーザのチョイ気にを取得する
-     * @param req 
-     * @param res 
+     * GETの処理：全ユーザのちょい気にを取得する。
+     * 
+     * @protected
+     * @param {Request} req リクエスト
+     * @param {Response} res レスポンス
+     * @returns {Promise<void>} 
+     * 
+     * @memberOf ChoikiniAction
      */
     protected async GetAllChoikini(req: Request, res: Response): Promise<void> {
 
@@ -316,9 +436,14 @@ export class ChoikiniAction extends RouterBase {
     }
 
     /**
-     * ちょい気にを登録する
-     * @param req 
-     * @param res 
+     * POSTの処理：ちょい気にを登録する。
+     * 
+     * @protected
+     * @param {Request} req リクエスト
+     * @param {Response} res レスポンス
+     * @returns {Promise<void>} 
+     * 
+     * @memberOf ChoikiniAction
      */
     protected async RegistChoikini(req: Request, res: Response): Promise<void> {
         // パラメータ取得

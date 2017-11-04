@@ -1,7 +1,3 @@
-/*
-* Dao
-*/
-
 import {IDbConfig} from "./IConfig"
 import { User, UserAccess, ChoikiniList, ChoikiniEntity } from "./datamodel"
 import { DaoError } from "./errors"
@@ -11,54 +7,83 @@ import * as Mongoose from "mongoose";
 
 /**
  * Daoインターフェース
+ * 
+ * @export
+ * @interface IDao
  */
 export interface IDao {
 
     /**
      * 不完全なUserから完全なUserを取得する。
-     * @param {User} user - 不完全なユーザオブジェクト。ユーザトークンが必須項目。
-     * @return {User} 完全なユーザオブジェクト。
+     * 
+     * @param {User} user 不完全なユーザオブジェクト。ユーザトークンが必須項目。
+     * @returns {Promise<User>} 完全なユーザオブジェクトをやり取りするPromise
+     * @throws DaoError ユーザ取得に失敗した場合にスローする。
+     * @memberOf IDao
      */
     SelectUser(user: User): Promise<User>;
 
     /**
      * ログイン処理を行い、ユーザトークンを取得する。
-     * @param {User} user - ユーザ名とパスワードが設定されたUserオブジェクト
-     * @return {Promise<User>} - Promise
-     * @throws DaoError
+     * 
+     * @param {User} user ユーザ名とパスワードが設定されたUserオブジェクト
+     * @returns {Promise<User>} ユーザオブジェクトをやり取りするPromise
+     * @throws DaoError ログイン失敗時にスローする。
+     * 
+     * @memberOf IDao
      */
     Login(user: User): Promise<User>;
         
     /**
      * ログオフ処理を行い、ユーザトークンを削除する。
-     * @param {User} user - ユーザトークンを設定したUserオブジェクト
-     * @return {boolean} ログオフ成否
+     * 
+     * @param {User} user ユーザトークンを設定したUserオブジェクト
+     * @returns {Promise<void>} 
+     * @throws DaoError ログオフ失敗時にスローする。
+     * @memberOf IDao
      */
     Logoff(user: User): Promise<void>;
 
     /**
      * ちょい気にを登録する
-     * @param {User} user - 登録対象ユーザ
-     * @param {ChoikiniEntity} - 登録するエントリ
-     * @throws DaoError
+     * 
+     * @param {User} user 登録対象ユーザ
+     * @param {ChoikiniEntity} choikini 登録するエントリ
+     * @returns {Promise<void>} 
+     * @throws DaoError 登録に失敗した時にスローする。
+     * 
+     * @memberOf IDao
      */
     RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<void>;
 
     /**
      * ユーザにひもづくちょい気にを取得する。
-     * @param {User} user: 対象ユーザ
-     * @throws DaoError
+     * 
+     * @param {User} user 対象ユーザ
+     * @returns {Promise<User>} ちょい気にを含む完全なユーザオブジェクトをやり取りするPromise
+     * @throws DaoError 取得に失敗した場合にスローする。
+     * 
+     * @memberOf IDao
      */
     SelectChoikini(user: User): Promise<User>;
 
     /**
      * ちょい気にに登録されているユーザ・ちょい気にを全て取得する。
+     * 
+     * @returns {Promise<User[]>} 全てのユーザとそれの紐づくちょい気にのリストをやり取りするPromise
+     * @throws DaoError 取得に失敗した場合にスローする。
+     * 
+     * @memberOf IDao
      */
     SelectAll():Promise<User[]>
 }
 
 /**
  * Userスキーマのドキュメントインターフェース
+ * 
+ * @export
+ * @interface IUser
+ * @extends {Mongoose.Document}
  */
 export interface IUser extends Mongoose.Document {
     _id: string;
@@ -71,6 +96,10 @@ export interface IUser extends Mongoose.Document {
 
 /**
  * ChoikiniListスキーマのドキュメントインターフェース
+ * 
+ * @export
+ * @interface IChoikiniList
+ * @extends {Mongoose.Document}
  */
 export interface IChoikiniList extends Mongoose.Document {
     _id: string;
@@ -80,6 +109,8 @@ export interface IChoikiniList extends Mongoose.Document {
 
 /**
  * Update操作で返却されるオブジェクト
+ * 
+ * @interface IMongoResponse
  */
 interface IMongoResponse {
     n: number;
@@ -90,12 +121,20 @@ interface IMongoResponse {
 
 /**
  * MongoDBへのDAO
+ * 
+ * @export
+ * @class MongoDao
+ * @implements {IDao}
  */
 export class MongoDao implements IDao {
 
     private _connection: Mongoose.Connection;
     /**
      * コネクション
+     * 
+     * @private
+     * @type {Mongoose.Connection}
+     * @memberOf MongoDao
      */
     private get Connection(): Mongoose.Connection { return this._connection }
     private set Connection(connection: Mongoose.Connection) { this._connection = connection }
@@ -107,6 +146,11 @@ export class MongoDao implements IDao {
 
     /**
      * Userコレクションのスキーマ
+     * 
+     * @readonly
+     * @private
+     * @type {Mongoose.Schema}
+     * @memberOf MongoDao
      */
     private get UserSchema(): Mongoose.Schema {
 
@@ -129,6 +173,11 @@ export class MongoDao implements IDao {
 
     /**
      * ChoikiniListコレクションのスキーマ
+     * 
+     * @readonly
+     * @private
+     * @type {Mongoose.Schema}
+     * @memberOf MongoDao
      */
     private get ChoikiniListSchema(): Mongoose.Schema {
         return new Mongoose.Schema(
@@ -155,8 +204,12 @@ export class MongoDao implements IDao {
 
     /**
      * 不完全なUserから完全なUserを取得する。
-     * @param {User} user - 不完全なユーザオブジェクト。ユーザ名・ユーザトークンが必須項目。
-     * @return {User} 完全なユーザオブジェクト。ちょい気にリストは取得しない
+     * 
+     * @param {User} user 不完全なユーザオブジェクト。ユーザトークンが必須項目。
+     * @returns {Promise<User>} 
+     * @throws DaoError ユーザ取得に失敗した場合にスローする。
+     * 
+     * @memberOf MongoDao
      */
     async SelectUser(user: User): Promise<User> {
 
@@ -192,7 +245,12 @@ export class MongoDao implements IDao {
 
     /**
      * ログイン処理を行い、ユーザトークンを取得する。
-     * @param user 
+     * 
+     * @param {User} user ユーザ名とパスワードが設定されたUserオブジェクト
+     * @returns {Promise<User>} ユーザオブジェクトをやり取りするPromise
+     * @throws DaoError ログイン失敗時にスローする。
+     * 
+     * @memberOf MongoDao
      */
     async Login(user: User): Promise<User>{
 
@@ -234,8 +292,12 @@ export class MongoDao implements IDao {
 
     /**
      * ログオフ処理を行い、ユーザトークンを削除する。
-     * @param {User} user - ユーザトークンを保持するUserオブジェクト
-     * @throws DaoError
+     * 
+     * @param {User} user ユーザトークンを設定したUserオブジェクト
+     * @returns {Promise<void>} 
+     * @throws DaoError ログオフ失敗時にスローする。
+     * 
+     * @memberOf MongoDao
      */
     async Logoff(user: User): Promise<void> {
         
@@ -274,9 +336,13 @@ export class MongoDao implements IDao {
 
     /**
      * ちょい気にを登録する
-     * @param {User} user - 登録対象ユーザとその情報。ユーザ名・トークン、エントリが必須
-     * @param {ChoikiniEntity} choikini - 登録するちょい気にのエントリ
-     * @throws DaoError
+     * 
+     * @param {User} user 登録対象ユーザ
+     * @param {ChoikiniEntity} choikini 登録するエントリ
+     * @returns {Promise<void>} 
+     * @throws DaoError 登録に失敗した時にスローする。
+     * 
+     * @memberOf MongoDao
      */
     async RegistChoikini(user: User, choikini: ChoikiniEntity): Promise<void>{
         let choikiniModel = this.GenerateChoikiniListModel();
@@ -326,8 +392,13 @@ export class MongoDao implements IDao {
     }
     
     /**
-     * ユーザに紐づくチョイ気にを取得する。
-     * @param user SelectUserにて取得されたUser。User._idが必須
+     * ユーザにひもづくちょい気にを取得する。
+     * 
+     * @param {User} user 対象ユーザ
+     * @returns {Promise<User>} ちょい気にを含む完全なユーザオブジェクトをやり取りするPromise
+     * @throws DaoError 取得に失敗した場合にスローする。
+     * 
+     * @memberOf MongoDao
      */
     async SelectChoikini(user: User): Promise<User> {
         let choikiniModel = this.GenerateChoikiniListModel();
@@ -368,6 +439,14 @@ export class MongoDao implements IDao {
         return user;
     }
 
+    /**
+     * ちょい気にに登録されているユーザ・ちょい気にを全て取得する。
+     * 
+     * @returns {Promise<User[]>} 全てのユーザとそれの紐づくちょい気にのリストをやり取りするPromise
+     * @throws DaoError 取得に失敗した場合にスローする。
+     * 
+     * @memberOf MongoDao
+     */
     async SelectAll():Promise<User[]> {
         let fullList: User[] = [];
 
@@ -400,11 +479,15 @@ export class MongoDao implements IDao {
         return fullList;
     }
     
-
     /**
      * トークンを生成・登録する
-     * @param user ユーザ名が入ったUserオブジェクト
-     * @param salt 
+     * 
+     * @protected
+     * @param {User} user ユーザ名が入ったUserオブジェクト
+     * @param {string} salt SALT値
+     * @returns {Promise<User>} 完全なユーザ情報をやり取りするPromise
+     * 
+     * @memberOf MongoDao
      */
     protected async UpdateToken(user: User, salt: string): Promise<User>{
 
@@ -445,6 +528,11 @@ export class MongoDao implements IDao {
 
     /**
      * Mongooseモデル：Userを生成
+     * 
+     * @private
+     * @returns {Mongoose.Model<IUser>} Userコレクションのモデル
+     * 
+     * @memberOf MongoDao
      */
     private GenerateUserModel(): Mongoose.Model<IUser> {
         return this.Connection.model<IUser>("User",this.UserSchema,"User");
@@ -452,14 +540,23 @@ export class MongoDao implements IDao {
 
     /**
      * Mongooseモデル：ChoikiniListを生成
+     * 
+     * @private
+     * @returns {Mongoose.Model<IChoikiniList>} ChoikiniListコレクションのモデル
+     * 
+     * @memberOf MongoDao
      */
     private GenerateChoikiniListModel(): Mongoose.Model<IChoikiniList> {
         return this.Connection.model<IChoikiniList>("ChoikiniList", this.ChoikiniListSchema,"ChoikiniList");
     }
 
     /**
+     * Creates an instance of MongoDao.
+     * 
      * @constructor
      * @throws DaoError
+     * 
+     * @memberOf MongoDao
      */
     public constructor() {
         (<any>Mongoose).Promise = global.Promise;

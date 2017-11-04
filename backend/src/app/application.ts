@@ -11,62 +11,46 @@ import * as Routing from "./routing";
 
 
 /**
- * choikini_bkのエントリポイント
+ * choikini WebAPIのエントリポイント
+ * 
+ * @class Application
  */
 class Application {
 
+
     /**
-     * run
-     * choikini_bk開始メソッド
+     * choikini WebAPI を開始する
+     * 
+     * @method Run
+     * @memberOf Application
      */
     public Run(): void {
         
-        // Clusterモジュールにてクラスタリング
-/*
-        if (Cluster.isMaster) {
-
-            for (var index = 0; index < cpus.length; index++) {
-                Cluster.fork();
-            }
-
-        } else {
-
-            let app = Express();
-
-            this.configure(app);
-            this.route(app);
-
-            Http.createServer(app).listen(
-                app.get('port'),
-                function() {
-                    console.log('Express server listening on port ' + app.get('port'));
-                }
-
-            );
-        }
-*/
         let app = Express();
 
         this.Configure(app);
         this.Route(app);
         this.HandleError(app);
 
-        app.listen(
-            app.get('port'),
-            function() {
+        app.listen(() => {
                 Logger.LogAccessInfo('Express server listening on port ' + app.get('port'));
-            }
-            );
-
+            });
     }
 
+    
     /**
-     * 指定したExpressjsのApplicationインターフェースの設定を行う。
-     * @param app Express.Applicationインターフェースの実装
+     * choikini WebAPI の設定を構成する。
+     * 
+     * @method Configure
+     * @private
+     * @param {Express.Application} app Expressjsのインスタンス
+     * 
+     * @memberOf Application
      */
     private Configure(app:Express.Application):void {
         let appConfig = Utils.GetConfig<IAppConfig>("application");
 
+        // ポートの設定
         app.set('port', appConfig.serverPort);
 
         // ロガーの変更
@@ -77,19 +61,19 @@ class Application {
         app.use(BodyParser.urlencoded({
             extended: true
         }));
-
         app.use(BodyParser.json());
     }
 
     /**
-     * アプリケーションのルーティングを行う。
-     * @param app Express.Applicationインターフェースの実装
+     * choikini WebAPI のルーティングを行う。
+     * 
+     * @private
+     * @param {Express.Application} app Expressjsのインスタンス
+     * @memberOf Application
      */
     private Route(app: Express.Application):void {
 
-        // トリアエズナマ
         new Routing.IndexAction(app).RegistRoute();
-        new Routing.OtameshiAction(app).RegistRoute();
         new Routing.UserAction(app).RegistRoute();
         new Routing.ChoikiniAction(app).RegistRoute();
         
@@ -99,6 +83,14 @@ class Application {
      * HandleError
      * @param app Express.Applicationインターフェースの実装
      */
+
+     /**
+      * 全体でハンドルされないエラーを処理する。 
+      *
+      * @method HandleError
+      * @param {Express.Application} app Expressjsのインスタンス
+      * @memberOf Application
+      */
     public HandleError(app: Express.Application) {
 
         // 404
@@ -111,17 +103,18 @@ class Application {
 
         // other errors
         app.use(function(err: Error, req: Express.Request, res:Express.Response, next:Express.NextFunction){
-            throw new ApplicationError(err.message);
-            
+                res.status(500);
+                next(err)
         });
         
     }
 }
 
+// アプリケーションを開始する。
 
-
-// Application エントリ
-
+/**
+ * アプリケーションインスタンス
+ */
 let choikini = new Application();
 
 choikini.Run();

@@ -1,33 +1,60 @@
-/**
- * procedure.ts
- * ロジック本体
- */
 import * as D from "./datamodel";
 import * as E from "./errors";
 import {MongoDao} from "./dao";
 import {Authentication, Logger} from "./commons";
 
 
- /**
+/**
   * 手続きのインターフェース
-  * @param T 入力とするクラス
-  * @param Y 出力とするクラス
-  */
+ * 
+ * @export
+ * @interface IProcedure
+ * @template T 入力とするクラス
+ * @template Y 出力とするクラス
+ */
 export interface IProcedure<T,Y> {
+
+    /**
+     * 処理を実行する
+     * 
+     * @param {T} input 入力
+     * @returns {Promise<Y>} 出力 
+     * 
+     * @memberOf IProcedure
+     */
      Exec(input: T): Promise<Y>;
 }
 
 /**
  * 手続きの基礎クラス
-  * @param T 入力とするクラス
-  * @param Y 出力とするクラス
+ * 
+ * @export
+ * @abstract
+ * @class ProcedureBase
+ * @implements {IProcedure<T, Y>}
+ * @template T 入力とするクラス
+ * @template Y 出力とするクラス
  */
 export abstract class ProcedureBase<T,Y> implements IProcedure<T,Y> {
+    /**
+     * 処理を実行する
+     * 
+     * @abstract
+     * @param {T} input 入力
+     * @returns {Promise<Y>} 出力
+     * 
+     * @memberOf ProcedureBase
+     */
     abstract async Exec(input: T): Promise<Y>;
 
     /**
      * ログオフ処理を行う
-     * @param user ログオフ対象ユーザ
+     * 
+     * @protected
+     * @param {D.User} user ログオフ対象ユーザ
+     * @returns {Promise<boolean>} ログオフ成否
+     * 
+     * @memberOf ProcedureBase
      */
     protected async Logoff(user: D.User): Promise<boolean> {
         let result: boolean = false
@@ -50,9 +77,21 @@ export abstract class ProcedureBase<T,Y> implements IProcedure<T,Y> {
 
 /**
  * ログイン処理
+ * 
+ * @export
+ * @class LoginProcedure
+ * @implements {IProcedure<D.User, D.Hal<D.LoginJSON>>}
  */
 export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
 
+    /**
+     * 処理を実行する
+     * 
+     * @param {D.User} input ログインするユーザ情報
+     * @returns {Promise<D.Hal<D.LoginJSON>>} ログイン処理結果 
+     * 
+     * @memberOf LoginProcedure
+     */
     public async Exec(input: D.User): Promise<D.Hal<D.LoginJSON>> {
         let hal = new D.Hal<D.LoginJSON>();
 
@@ -87,10 +126,22 @@ export class LoginProcedure implements IProcedure<D.User, D.Hal<D.LoginJSON>> {
 }
 
 /**
- * 単一ユーザのチョイ気にを取得する処理
+ * 単一ユーザのちょい気にを取得する処理
+ * 
+ * @export
+ * @class GetChoikiniProcedure
+ * @extends {ProcedureBase<D.User, D.Hal<D.ChoikiniJSON>>}
  */
 export class GetChoikiniProcedure extends ProcedureBase<D.User, D.Hal<D.ChoikiniJSON>> {
 
+    /**
+     * 処理を実行する
+     * 
+     * @param {D.User} input ちょい気にを取得する対象のユーザ
+     * @returns {Promise<D.Hal<D.ChoikiniJSON>>} 取得結果
+     * 
+     * @memberOf GetChoikiniProcedure
+     */
     public async Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON>> {
         let hal = new D.Hal<D.ChoikiniJSON>();
 
@@ -139,10 +190,22 @@ export class GetChoikiniProcedure extends ProcedureBase<D.User, D.Hal<D.Choikini
 }
 
 /**
- * チョイ気にを登録する処理
+ * ちょい気にを登録する処理
+ * 
+ * @export
+ * @class RegistChoikiniProcedure
+ * @extends {ProcedureBase<D.ChikiniRegistInfo, D.Hal<D.UpsertResultJSON>>}
  */
 export class RegistChoikiniProcedure extends ProcedureBase<D.ChikiniRegistInfo, D.Hal<D.UpsertResultJSON>> {
 
+    /**
+     * 処理を実行する
+     * 
+     * @param {D.ChikiniRegistInfo} input 登録する情報
+     * @returns {Promise<D.Hal<D.UpsertResultJSON>>} 登録結果
+     * 
+     * @memberOf RegistChoikiniProcedure
+     */
     public async Exec(input: D.ChikiniRegistInfo): Promise<D.Hal<D.UpsertResultJSON>> {
         let hal = new D.Hal<D.UpsertResultJSON>();
 
@@ -192,10 +255,22 @@ export class RegistChoikiniProcedure extends ProcedureBase<D.ChikiniRegistInfo, 
 }
 
 /**
- * 全ユーザのチョイ気にを取得する処理
+ * 全ユーザのちょい気にを取得する処理
+ * 
+ * @export
+ * @class GetAllChoikiniProcedure
+ * @extends {ProcedureBase<D.User, D.Hal<D.ChoikiniJSON[]>>}
  */
 export class GetAllChoikiniProcedure extends ProcedureBase<D.User, D.Hal<D.ChoikiniJSON[]>> {
     
+    /**
+     * 処理を実行する
+     * 
+     * @param {D.User} input 処理を要求するユーザ
+     * @returns {Promise<D.Hal<D.ChoikiniJSON[]>>} 取得結果
+     * 
+     * @memberOf GetAllChoikiniProcedure
+     */
     public async Exec(input: D.User): Promise<D.Hal<D.ChoikiniJSON[]>> {
         let hal = new D.Hal<D.ChoikiniJSON[]>();
 

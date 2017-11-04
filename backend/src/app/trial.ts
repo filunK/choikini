@@ -1,7 +1,9 @@
 
 /**
- * Trials
  * mochaユニットテスト検証用のお試しクラス
+ * 
+ * @export
+ * @class Trials
  */
 export class Trials {
 
